@@ -1,0 +1,400 @@
+/* ==========================
+   全国ネットワークマップ
+========================== */
+
+.map {
+    text-align: center;
+}
+
+.map .section-inner {
+    max-width: 1300px;
+}
+
+.japan-map {
+    position: relative;
+    max-width: 1200px;
+    margin: 40px auto 0;
+    --map-dot-size: 12px;
+    --map-dot-multi-size: 16px;
+    --map-dot-spread: 5px;
+    --map-dot-multi-spread: 5px;
+}
+
+.japan-map img {
+    width: 100%;
+    display: block;
+    position: relative;
+    z-index: 0;
+}
+
+.map-network-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.map-network-line {
+    fill: none;
+    stroke: rgba(27, 74, 160, 0.55);
+    stroke-width: 0.22;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    filter: drop-shadow(0 0 2px rgba(27, 74, 160, 0.35));
+    animation: map-link-line 1.15s ease-out forwards;
+}
+
+.map-point {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+@keyframes map-link-line {
+    0% {
+        opacity: 0;
+        stroke-dashoffset: 1;
+    }
+
+    18% {
+        opacity: 0.85;
+    }
+
+    70% {
+        opacity: 0.55;
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 0;
+        stroke-dashoffset: 0;
+    }
+}
+
+.japan-map .map-point-desktop {
+    display: block;
+}
+
+.japan-map .map-point-mobile {
+    display: none;
+}
+
+.dot {
+    display: inline-block;
+
+    width: var(--map-dot-size);
+    height: var(--map-dot-size);
+
+    background: #0F2D63;
+
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    position: relative;
+    vertical-align: middle;
+    z-index: 2;
+}
+
+.dot::after {
+    content: "";
+
+    position: absolute;
+
+    inset: calc(var(--map-dot-spread) * -1);
+
+    border: 2px solid #0F2D63;
+
+    border-radius: 50%;
+
+    animation: pulse 2s infinite;
+    transform-origin: center;
+    z-index: -1;
+}
+
+
+.dot.multi {
+
+    width: var(--map-dot-multi-size);
+    height: var(--map-dot-multi-size);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #0F2D63;
+
+    color: #fff;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    border-radius: 50%;
+}
+
+.dot.multi::after {
+    content: "";
+
+    position: absolute;
+
+    inset: calc(var(--map-dot-multi-spread) * -1);
+
+    border: 2px solid #0F2D63;
+
+    border-radius: 50%;
+
+    animation: pulse 2s infinite;
+    transform-origin: center;
+    z-index: -1;
+}
+
+
+@keyframes pulse {
+
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(2);
+        opacity: 0.2;
+    }
+
+}
+
+.tooltip {
+    position: absolute;
+
+    bottom: 30px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    width: 220px;
+
+    background: #fff;
+
+    padding: 12px;
+
+    border-radius: 8px;
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+
+    text-align: center;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: .3s;
+
+    z-index: 10;
+}
+
+.map-point:hover,
+.map-point.active {
+    z-index: 20;
+}
+
+.map-point:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tooltip p {
+    margin: 0 0 12px;
+}
+
+.tooltip p:last-child {
+    margin-bottom: 0;
+}
+
+.tooltip .member-store-name {
+    display: block;
+    margin-top: 0;
+    font-size: 0.82em;
+    line-height: 1.35;
+    font-weight: 600;
+}
+
+.tooltip strong {
+    display: block;
+}
+
+.tooltip a {
+    display: inline-block;
+
+    margin-top: 12px;
+
+    padding: 6px 16px;
+
+    background: #0F2D63;
+
+    color: #fff;
+
+    border-radius: 8px;
+
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition: .3s;
+}
+
+.tooltip strong.has-store-name + a {
+    margin-top: 16px;
+}
+
+.tooltip a:hover {
+    background: #1B4AA0;
+}
+
+.map-point.active .tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+
+
+.oohashi {
+    top: 17.1%;
+    left: 70.8%;
+}
+
+.toho {
+    top: 57.6%;
+    left: 66.5%;
+}
+
+.hyodo {
+    top: 57.8%;
+    left: 63.5%;
+}
+
+.marubeni {
+    top: 60.3%;
+    left: 62.2%;
+}
+
+/* NRT、flexworks */
+.tokyo01 {
+    top: 61.6%;
+    left: 63.5%;
+}
+
+.sanei {
+    top: 63.6%;
+    left: 62.5%;
+}
+
+.techno {
+    top: 55.4%;
+    left: 56.9%;
+}
+
+.torei {
+    top: 62.4%;
+    left: 58.1%;
+}
+
+.maruzen {
+    top: 67.6%;
+    left: 55%
+}
+
+
+/* 三岳、アルコ */
+.aichi {
+    top: 64%;
+    left: 50.2%;
+}
+
+.seiko {
+    top: 63.8%;
+    left: 49.9%;
+}
+
+.suzukan {
+    top: 66.2%;
+    left: 49.9%;
+}
+
+.ravo {
+    top: 59%;
+    left: 48.7%;
+}
+
+.taiyo {
+    top: 65.6%;
+    left: 47.5%;
+}
+
+.sanwa {
+    top: 68%;
+    left: 45.3%;
+}
+
+.daiyacosmo {
+    top: 68.8%;
+    left: 47%;
+}
+
+.riseup {
+    top: 66%;
+    left: 42.5%;
+}
+
+.ainas {
+    top: 69.8%;
+    left: 42.3%;
+}
+
+.fukui {
+    top: 67.8%;
+    left: 38.5%;
+}
+
+.uematsu {
+    top: 72.2%;
+    left: 33.5%;
+}
+
+.mk {
+    top: 73.6%;
+    left: 23.3%;
+}
+
+.ito {
+    top: 75.6%;
+    left: 23.3%;
+}
+
+.sendai {
+    top: 85.2%;
+    left: 21.8%;
+}
+
+@media (max-width: 767px) {
+    .japan-map {
+        --map-dot-size: var(--map-dot-size-mobile);
+        --map-dot-multi-size: var(--map-dot-multi-size-mobile);
+        --map-dot-spread: var(--map-dot-spread-mobile);
+        --map-dot-multi-spread: var(--map-dot-multi-spread-mobile);
+    }
+
+    .japan-map .map-point-desktop {
+        display: none;
+    }
+
+    .japan-map .map-point-mobile {
+        display: block;
+    }
+
+    .japan-map .tooltip {
+        display: none;
+    }
+}

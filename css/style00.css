@@ -1,0 +1,73 @@
+.gks-map{
+    padding:80px 20px;
+}
+
+.map-wrap{
+    position:relative;
+    max-width:1000px;
+    margin:0 auto;
+}
+
+.map-wrap img{
+    width:100%;
+    display:block;
+}
+
+/* 兵庫 */
+
+.hyogo{
+    position:absolute;
+    top:68%;
+    left:43%;
+    transform:translate(-50%,-50%);
+}
+
+/* 番号 */
+
+.pin span{
+    width:15px;
+    height:15px;
+
+    border-radius:50%;
+
+    background:#005BAC;
+    color:#fff;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-weight:bold;
+    cursor:pointer;
+
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* 吹き出し */
+
+.popup{
+    display:none;
+
+    position:absolute;
+
+    top:-20px;
+    left:60px;
+
+    width:260px;
+
+    background:#fff;
+
+    padding:20px;
+
+    border-radius:10px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,0.15);
+
+    z-index:10;
+}
+
+/* ホバー */
+
+.pin:hover .popup{
+    display:block;
+}

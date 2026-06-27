@@ -1,0 +1,146 @@
+[
+    {
+        "id": "support_001",
+        "company": "エイシン電機株式会社",
+        "president": "代表取締役社長 柴﨑 栄二",
+        "address": "〒240-0003 神奈川県横浜市保土ヶ谷区天王町2-39-3",
+        "url": "https://www.eishin-esdk.co.jp/",
+        "sort_order": 1,
+        "published": true
+    },
+    {
+        "id": "support_002",
+        "company": "フクシマガリレイ株式会社",
+        "president": "代表取締役社長 福島 豪",
+        "address": "〒555-0011 大阪府大阪市西淀川区竹島2-6-18",
+        "url": "https://www.galilei.co.jp/",
+        "sort_order": 2,
+        "published": true
+    },
+    {
+        "id": "support_003",
+        "company": "パナソニック産機システムズ株式会社",
+        "president": "代表取締役 左近 貞治",
+        "address": "〒131-0045 東京都墨田区押上1-1-2",
+        "url": "",
+        "sort_order": 3,
+        "published": true
+    },
+    {
+        "id": "support_004",
+        "company": "株式会社 コメットカトウ",
+        "president": "代表取締役社長 加藤 勇樹",
+        "address": "〒495-8517 愛知県稲沢市祖父江町甲新田イ-9",
+        "url": "https://www.cometkato.co.jp/",
+        "sort_order": 4,
+        "published": true
+    },
+    {
+        "id": "support_005",
+        "company": "エレクトロラックス・プロフェッショナル・ジャパン株式会社",
+        "president": "代表取締役社長 高雄 雅丸",
+        "address": "〒141-0022 東京都品川区東五反田1丁目24番2号 JRE東五反田一丁目ビル2階",
+        "url": "https://www.tosei-corporation.co.jp/",
+        "sort_order": 5,
+        "published": true
+    },
+    {
+        "id": "support_006",
+        "company": "株式会社 明城製作所",
+        "president": "代表取締役 河島 絵美",
+        "address": "〒670-0061 兵庫県姫路市西今宿1丁目11-55",
+        "url": "https://www.meijo-ss.co.jp/",
+        "sort_order": 6,
+        "published": true
+    },
+    {
+        "id": "support_007",
+        "company": "国際化工株式会社",
+        "president": "代表取締役社長 神木 宗和",
+        "address": "〒639-2272 奈良県御所市蛇穴230",
+        "url": "https://www.kokusai-kako.co.jp/",
+        "sort_order": 7,
+        "published": true
+    },
+    {
+        "id": "support_008",
+        "company": "押切電機株式会社",
+        "president": "代表取締役社長 岡田 重雄",
+        "address": "〒480-0304 愛知県春日井市神屋町熊野上1139-49",
+        "url": "https://www.oshikiri.net/index.html",
+        "sort_order": 8,
+        "published": true
+    },
+    {
+        "id": "support_009",
+        "company": "服部工業株式会社",
+        "president": "代表取締役 服部 俊男",
+        "address": "〒444-8691 愛知県岡崎市羽根町字若宮30番地",
+        "url": "https://www.hattorikogyo.com/",
+        "sort_order": 9,
+        "published": true
+    },
+    {
+        "id": "support_010",
+        "company": "ヒゴグリラー株式会社",
+        "president": "代表取締役社長 肥後 慎一郎",
+        "address": "〒547-0002 大阪府大阪市平野区加美東6-15-41",
+        "url": "https://www.higo-griller.co.jp/index.html",
+        "sort_order": 10,
+        "published": true
+    },
+    {
+        "id": "support_011",
+        "company": "さぬき麺機株式会社",
+        "president": "代表取締役社長 中野 郁",
+        "address": "〒767-0011 香川県三豊市高瀬町下勝間148-3",
+        "url": "https://www.menki.co.jp/",
+        "sort_order": 11,
+        "published": true
+    },
+    {
+        "id": "support_012",
+        "company": "株式会社 メイスイ",
+        "president": "代表取締役 永井 秀樹",
+        "address": "〒550-0002 大阪府大阪市西区江戸堀1丁目27番6号",
+        "url": "https://www.meisui.co.jp/",
+        "sort_order": 12,
+        "published": true
+    },
+    {
+        "id": "support_013",
+        "company": "サンタ株式会社",
+        "president": "代表取締役社長 森田 誠一",
+        "address": "〒920https-0333 石川県金沢市無量寺3丁目18番地",
+        "url": "https://no1-santa.com/",
+        "sort_order": 13,
+        "published": true
+    },
+    {
+        "id": "support_014",
+        "company": "株式会社 エフ・エム・アイ",
+        "president": "代表取締役社長 松野 敦",
+        "address": "〒106-0041 東京都港区麻布台1-11-9",
+        "url": "https://www.fmi.co.jp/",
+        "sort_order": 14,
+        "published": true
+    },
+    {
+        "id": "support_015",
+        "company": "クリタック株式会社",
+        "president": "代表取締役 渡辺 信介",
+        "address": "〒164-0012 東京都中野区本町2丁目46番1号 中野坂上サンブライトツインビル11F",
+        "url": "https://www.kuritac.co.jp/",
+        "sort_order": 15,
+        "published": true
+    },
+    {
+        "id": "support_016",
+        "company": "株式会社メイトー",
+        "president": "代表取締役社長 大岩 政敏",
+        "address": "〒455-0037 名古屋市港区名港二丁目9番27号 ポートプラザビル3階",
+        "url": "https://www.meito-ngo.jp/",
+        "sort_order": 16,
+        "published": true
+    }
+]

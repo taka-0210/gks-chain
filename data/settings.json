@@ -1,0 +1,30 @@
+{
+    "fv_images": [
+        {
+            "src": "image/fv/fv01.jpg",
+            "alt": "GKSチェーン協会のファーストビュー画像"
+        },
+        {
+            "src": "image/fv/fv02.jpg",
+            "alt": "GKSチェーン協会のファーストビュー画像"
+        },
+        {
+            "src": "image/fv/fv03.jpg",
+            "alt": "GKSチェーン協会のファーストビュー画像"
+        }
+    ],
+    "header_logo": "image/logo/logo.png",
+    "header_logo_scale": 85,
+    "footer_logo": "image/logo/footer_logo_20260627_122655_4479494a.png",
+    "footer_logo_scale": 40,
+    "map_group_distance": 0.5,
+    "map_group_distance_mobile": 4,
+    "map_dot_size": 10,
+    "map_dot_size_mobile": 3,
+    "map_dot_multi_size": 16,
+    "map_dot_multi_size_mobile": 6,
+    "map_dot_spread": 2.5,
+    "map_dot_spread_mobile": 0.5,
+    "map_dot_multi_spread": 2,
+    "map_dot_multi_spread_mobile": 0.5
+}

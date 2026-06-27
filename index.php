@@ -269,7 +269,13 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
                         <img src="<?= h((string)$member['president_image']); ?>" alt="<?= h((string)($member['president'] ?? $memberNameParts['company'])); ?>">
                       <?php endif; ?>
                       <?php if (!empty($member['president'])): ?>
-                        <p class="president"><?= h((string)$member['president']); ?></p>
+                        <?php $representativeParts = representative_parts((string)$member['president']); ?>
+                        <p class="president">
+                          <span class="president-role"><?= h($representativeParts['role']); ?></span>
+                          <?php if ($representativeParts['name'] !== ''): ?>
+                            <span class="president-name"><?= h($representativeParts['name']); ?></span>
+                          <?php endif; ?>
+                        </p>
                       <?php endif; ?>
                     </div>
                   <?php endif; ?>

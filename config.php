@@ -410,6 +410,30 @@ function regular_member_display_name(array $member): string
     return $parts['company'] . '（' . $parts['store_name'] . '）';
 }
 
+function representative_parts(string $representative): array
+{
+    $tokens = preg_split('/\s+/u', trim($representative));
+
+    if (!is_array($tokens) || count($tokens) < 2) {
+        return [
+            'role' => trim($representative),
+            'name' => '',
+        ];
+    }
+
+    if (count($tokens) === 2) {
+        return [
+            'role' => $tokens[0],
+            'name' => $tokens[1],
+        ];
+    }
+
+    return [
+        'role' => implode(' ', array_slice($tokens, 0, -2)),
+        'name' => implode(' ', array_slice($tokens, -2)),
+    ];
+}
+
 function group_regular_members_by_prefecture(array $items): array
 {
     $groups = [];

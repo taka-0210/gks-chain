@@ -235,6 +235,15 @@
     color: #333;
 }
 
+.member-company .president-role,
+.member-company .president-name {
+    display: inline;
+}
+
+.member-company .president-name::before {
+    content: " ";
+}
+
 .member-company > .president {
     padding: 0 24px;
     margin-top: 24px;
@@ -360,6 +369,15 @@
     .member-company .member-representative {
         gap: 12px;
         margin-top: 20px;
+    }
+
+    .member-company .president-role,
+    .member-company .president-name {
+        display: block;
+    }
+
+    .member-company .president-name::before {
+        content: none;
     }
 
     .member-company .member-representative img {

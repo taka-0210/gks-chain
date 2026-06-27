@@ -394,6 +394,11 @@
         display: block;
     }
 
+    .japan-map .map-network-line {
+        animation: none;
+        opacity: 0;
+    }
+
     .japan-map .tooltip {
         display: none;
     }

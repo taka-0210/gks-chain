@@ -1626,8 +1626,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
               <input type="text" name="president_role" value="<?= h($regularFormPresidentRole); ?>" placeholder="例: 代表取締役社長">
             </label>
             <label>
-              代表者 アルファベット表記
-              <input type="text" name="president_alphabet" value="<?= h($regularFormPresidentAlphabet); ?>" placeholder="例: TARO YAMADA">
+              代表者 名
+              <input type="text" name="president_first_name" value="<?= h($regularFormPresidentFirstName); ?>" placeholder="例: 太郎">
             </label>
           </div>
 
@@ -1637,8 +1637,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
               <input type="text" name="president_last_name" value="<?= h($regularFormPresidentLastName); ?>" placeholder="例: 山田">
             </label>
             <label>
-              代表者 名
-              <input type="text" name="president_first_name" value="<?= h($regularFormPresidentFirstName); ?>" placeholder="例: 太郎">
+              代表者 アルファベット表記
+              <input type="text" name="president_alphabet" value="<?= h($regularFormPresidentAlphabet); ?>" placeholder="例: TARO YAMADA">
             </label>
           </div>
 

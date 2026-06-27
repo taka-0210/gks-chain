@@ -244,6 +244,15 @@
     content: " ";
 }
 
+.member-company .president-alphabet {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.82em;
+    font-weight: 500;
+    color: #667085;
+    letter-spacing: 0;
+}
+
 .member-company > .president {
     padding: 0 24px;
     margin-top: 24px;

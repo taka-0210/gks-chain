@@ -263,17 +263,20 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
                     <?php endif; ?>
                   </h3>
 
-                  <?php if (!empty($member['president']) || !empty($member['president_image'])): ?>
+                  <?php $representativeParts = regular_member_representative_parts($member); ?>
+                  <?php if ($representativeParts['role'] !== '' || $representativeParts['name'] !== '' || $representativeParts['alphabet'] !== '' || !empty($member['president_image'])): ?>
                     <div class="member-representative">
                       <?php if (!empty($member['president_image'])): ?>
-                        <img src="<?= h((string)$member['president_image']); ?>" alt="<?= h((string)($member['president'] ?? $memberNameParts['company'])); ?>">
+                        <img src="<?= h((string)$member['president_image']); ?>" alt="<?= h(regular_member_representative_display_name($member) !== '' ? regular_member_representative_display_name($member) : $memberNameParts['company']); ?>">
                       <?php endif; ?>
-                      <?php if (!empty($member['president'])): ?>
-                        <?php $representativeParts = representative_parts((string)$member['president']); ?>
+                      <?php if ($representativeParts['role'] !== '' || $representativeParts['name'] !== '' || $representativeParts['alphabet'] !== ''): ?>
                         <p class="president">
-                          <span class="president-role"><?= h($representativeParts['role']); ?></span>
-                          <?php if ($representativeParts['name'] !== ''): ?>
-                            <span class="president-name"><?= h($representativeParts['name']); ?></span>
+                          <?php if ($representativeParts['role'] !== ''): ?>
+                            <span class="president-role"><?= h($representativeParts['role']); ?></span>
+                          <?php endif; ?>
+                          <span class="president-name"><?= h($representativeParts['name']); ?></span>
+                          <?php if ($representativeParts['alphabet'] !== ''): ?>
+                            <span class="president-alphabet"><?= h($representativeParts['alphabet']); ?></span>
                           <?php endif; ?>
                         </p>
                       <?php endif; ?>

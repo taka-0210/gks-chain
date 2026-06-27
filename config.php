@@ -434,6 +434,35 @@ function representative_parts(string $representative): array
     ];
 }
 
+function regular_member_representative_parts(array $member): array
+{
+    $role = trim((string)($member['president_role'] ?? ''));
+    $lastName = trim((string)($member['president_last_name'] ?? ''));
+    $firstName = trim((string)($member['president_first_name'] ?? ''));
+    $alphabet = trim((string)($member['president_alphabet'] ?? ''));
+
+    if ($role === '' && $lastName === '' && $firstName === '') {
+        $parts = representative_parts((string)($member['president'] ?? ''));
+        $role = $parts['role'];
+        [$lastName, $firstName] = array_pad(preg_split('/\s+/u', $parts['name']) ?: [], 2, '');
+    }
+
+    return [
+        'role' => $role,
+        'last_name' => $lastName,
+        'first_name' => $firstName,
+        'name' => trim($lastName . ' ' . $firstName),
+        'alphabet' => $alphabet,
+    ];
+}
+
+function regular_member_representative_display_name(array $member): string
+{
+    $parts = regular_member_representative_parts($member);
+
+    return trim($parts['role'] . ' ' . $parts['name']);
+}
+
 function group_regular_members_by_prefecture(array $items): array
 {
     $groups = [];

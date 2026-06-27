@@ -203,6 +203,11 @@ function collect_regular_member_form_data(): array
 {
     $mapTop = trim(strip_tags((string)($_POST['map_top'] ?? '')));
     $mapLeft = trim(strip_tags((string)($_POST['map_left'] ?? '')));
+    $presidentRole = trim(strip_tags((string)($_POST['president_role'] ?? '')));
+    $presidentLastName = trim(strip_tags((string)($_POST['president_last_name'] ?? '')));
+    $presidentFirstName = trim(strip_tags((string)($_POST['president_first_name'] ?? '')));
+    $presidentAlphabet = trim(strip_tags((string)($_POST['president_alphabet'] ?? '')));
+    $president = trim($presidentRole . ' ' . $presidentLastName . ' ' . $presidentFirstName);
     $presidentImage = !empty($_POST['remove_president_image'])
         ? ''
         : trim(strip_tags((string)($_POST['existing_president_image'] ?? '')));
@@ -211,7 +216,11 @@ function collect_regular_member_form_data(): array
         'prefecture' => trim(strip_tags((string)($_POST['prefecture'] ?? ''))),
         'company' => trim(strip_tags((string)($_POST['company'] ?? ''))),
         'store_name' => trim(strip_tags((string)($_POST['store_name'] ?? ''))),
-        'president' => trim(strip_tags((string)($_POST['president'] ?? ''))),
+        'president' => $president,
+        'president_role' => $presidentRole,
+        'president_last_name' => $presidentLastName,
+        'president_first_name' => $presidentFirstName,
+        'president_alphabet' => $presidentAlphabet,
         'president_image' => $presidentImage,
         'address' => trim(strip_tags((string)($_POST['address'] ?? ''))),
         'tel' => trim(strip_tags((string)($_POST['tel'] ?? ''))),
@@ -1009,10 +1018,15 @@ if ($regularEditId !== '') {
 $regularFormItem = $editingRegularMember ?? [];
 $isRegularEditing = $editingRegularMember !== null;
 $regularFormParts = regular_member_parts($regularFormItem);
+$regularFormRepresentativeParts = regular_member_representative_parts($regularFormItem);
 $regularFormPrefecture = (string)($_POST['prefecture'] ?? ($regularFormItem['prefecture'] ?? ''));
 $regularFormCompany = (string)($_POST['company'] ?? $regularFormParts['company']);
 $regularFormStoreName = (string)($_POST['store_name'] ?? $regularFormParts['store_name']);
-$regularFormPresident = (string)($_POST['president'] ?? ($regularFormItem['president'] ?? ''));
+$regularFormPresidentRole = (string)($_POST['president_role'] ?? $regularFormRepresentativeParts['role']);
+$regularFormPresidentLastName = (string)($_POST['president_last_name'] ?? $regularFormRepresentativeParts['last_name']);
+$regularFormPresidentFirstName = (string)($_POST['president_first_name'] ?? $regularFormRepresentativeParts['first_name']);
+$regularFormPresidentAlphabet = (string)($_POST['president_alphabet'] ?? $regularFormRepresentativeParts['alphabet']);
+$regularFormPresident = trim($regularFormPresidentRole . ' ' . $regularFormPresidentLastName . ' ' . $regularFormPresidentFirstName);
 $regularFormPresidentImage = (string)($_POST['existing_president_image'] ?? ($regularFormItem['president_image'] ?? ''));
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(($_POST['action'] ?? ''), ['regular_create', 'regular_update'], true) && isset($data['president_image'])) {
     $regularFormPresidentImage = (string)$data['president_image'];
@@ -1606,10 +1620,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
             </label>
           </div>
 
-          <label>
-            代表者
-            <input type="text" name="president" value="<?= h($regularFormPresident); ?>" placeholder="例: 代表取締役　山田 太郎">
-          </label>
+          <div class="admin-grid">
+            <label>
+              代表者 役職
+              <input type="text" name="president_role" value="<?= h($regularFormPresidentRole); ?>" placeholder="例: 代表取締役社長">
+            </label>
+            <label>
+              代表者 アルファベット表記
+              <input type="text" name="president_alphabet" value="<?= h($regularFormPresidentAlphabet); ?>" placeholder="例: TARO YAMADA">
+            </label>
+          </div>
+
+          <div class="admin-grid">
+            <label>
+              代表者 姓
+              <input type="text" name="president_last_name" value="<?= h($regularFormPresidentLastName); ?>" placeholder="例: 山田">
+            </label>
+            <label>
+              代表者 名
+              <input type="text" name="president_first_name" value="<?= h($regularFormPresidentFirstName); ?>" placeholder="例: 太郎">
+            </label>
+          </div>
 
           <label>
             代表者写真
@@ -1678,6 +1709,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
               <th>順</th>
               <th>都道府県</th>
               <th>会社名</th>
+              <th>代表者</th>
               <th>地図座標</th>
               <th>状態</th>
               <th>操作</th>
@@ -1689,6 +1721,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
                 <td><?= h((string)($member['sort_order'] ?? '')); ?></td>
                 <td><?= h((string)($member['prefecture'] ?? '')); ?></td>
                 <td><?= h(regular_member_display_name($member)); ?></td>
+                <?php $adminRepresentativeParts = regular_member_representative_parts($member); ?>
+                <td>
+                  <?= h(regular_member_representative_display_name($member)); ?>
+                  <?php if ($adminRepresentativeParts['alphabet'] !== ''): ?>
+                    <br><small><?= h($adminRepresentativeParts['alphabet']); ?></small>
+                  <?php endif; ?>
+                </td>
                 <td>
                   <?php if (($member['map_top'] ?? null) !== null && ($member['map_left'] ?? null) !== null): ?>
                     上 <?= h((string)$member['map_top']); ?>% / 左 <?= h((string)$member['map_left']); ?>%

@@ -114,27 +114,57 @@
 
 .about-message-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  align-items: start;
 }
 
 .about-message {
-  padding: 26px;
+  padding: 30px;
   border-radius: 8px;
   background: #fff;
   box-shadow: var(--shadow);
 }
 
+.about-message-label {
+  width: fit-content;
+  margin-bottom: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #0f2d63;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .about-message h3 {
   color: #0f2d63;
-  font-size: 19px;
+  font-size: 22px;
   line-height: 1.5;
-  margin-bottom: 14px;
+  margin-bottom: 6px;
+}
+
+.about-message-role {
+  margin-bottom: 18px;
+  color: #667085;
+  font-weight: 700;
 }
 
 .about-message p {
   color: #555;
   line-height: 1.85;
+}
+
+.about-message-body {
+  margin-top: 18px;
+}
+
+.about-message-body p {
+  margin-bottom: 16px;
+}
+
+.about-message-body p:last-child {
+  margin-bottom: 0;
 }
 
 .about-timeline {

@@ -192,7 +192,7 @@ function validate_news_form(array $data): array
         $errors[] = 'タイトルを入力してください。';
     }
 
-    if ($data['body'] === '') {
+    if (!empty($data['published']) && $data['body'] === '') {
         $errors[] = '本文を入力してください。';
     }
 
@@ -1000,7 +1000,7 @@ $formImages = $_SERVER['REQUEST_METHOD'] === 'POST'
     : news_images($formItem);
 $formPublished = $_SERVER['REQUEST_METHOD'] === 'POST'
     ? !empty($_POST['published'])
-    : ($isEditing ? !empty($formItem['published']) : true);
+    : ($isEditing ? !empty($formItem['published']) : false);
 
 if ($regularEditId !== '') {
     foreach ($regularMembers as $member) {
@@ -1338,6 +1338,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
       gap: 18px;
     }
 
+    .admin-representative-grid .representative-role {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .admin-representative-grid .representative-last-name {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .admin-representative-grid .representative-first-name {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .admin-representative-grid .representative-alphabet {
+      grid-column: 1;
+      grid-row: 3;
+    }
+
     .admin-form label.admin-check {
       display: flex;
       align-items: center;
@@ -1349,11 +1369,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
       cursor: pointer;
     }
 
-    .admin-form label.admin-check input[type="checkbox"] {
+    .admin-form label.admin-check input[type="checkbox"],
+    .admin-form label.admin-check input[type="radio"] {
       width: 18px;
       height: 18px;
       margin: 0;
       flex: 0 0 auto;
+    }
+
+    .admin-status-options {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .admin-status-options label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 10px 14px;
+      border: 1px solid #d8dde8;
+      border-radius: 6px;
+      background: #f7f8fa;
+      color: var(--main);
+    }
+
+    .admin-status-badge {
+      display: inline-flex;
+      align-items: center;
+      min-width: 64px;
+      justify-content: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .admin-status-badge.published {
+      background: #eaf4ee;
+      color: #176236;
+    }
+
+    .admin-status-badge.draft {
+      background: #fff3df;
+      color: #8a4b00;
     }
 
     .admin-alert {
@@ -1429,6 +1489,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
 
       .admin-news-image-item {
         grid-template-columns: 1fr;
+      }
+
+      .admin-representative-grid > label {
+        grid-column: auto;
+        grid-row: auto;
       }
 
       .admin-table {
@@ -1510,7 +1575,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
 
           <label>
             本文
-            <textarea name="body" required><?= h($formBody); ?></textarea>
+            <textarea name="body"><?= h($formBody); ?></textarea>
+            <span class="admin-help">下書きは本文が空でも保存できます。公開する場合は本文を入力してください。</span>
           </label>
 
           <label>
@@ -1540,10 +1606,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
             <?php endforeach; ?>
           </div>
 
-          <label class="admin-check">
-            <input type="checkbox" name="published" value="1" <?= $formPublished ? 'checked' : ''; ?>>
-            公開する
-          </label>
+          <div>
+            <p class="admin-help">公開状態</p>
+            <div class="admin-status-options">
+              <label>
+                <input type="radio" name="published" value="0" <?= !$formPublished ? 'checked' : ''; ?>>
+                下書き保存
+              </label>
+              <label>
+                <input type="radio" name="published" value="1" <?= $formPublished ? 'checked' : ''; ?>>
+                公開して保存
+              </label>
+            </div>
+          </div>
 
           <div class="admin-actions">
             <button type="submit"><?= $isEditing ? '更新する' : '保存する'; ?></button>
@@ -1570,7 +1645,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
               <tr>
                 <td><?= h(news_display_date($item)); ?></td>
                 <td><?= h((string)($item['title'] ?? '')); ?></td>
-                <td><?= !empty($item['published']) ? '公開' : '非公開'; ?></td>
+                <td>
+                  <span class="admin-status-badge <?= !empty($item['published']) ? 'published' : 'draft'; ?>">
+                    <?= !empty($item['published']) ? '公開' : '下書き'; ?>
+                  </span>
+                </td>
                 <td>
                   <div class="admin-table-actions">
                     <a class="admin-edit-link" href="admin.php?edit=<?= h((string)($item['id'] ?? '')); ?>">編集</a>
@@ -1620,23 +1699,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
             </label>
           </div>
 
-          <div class="admin-grid">
-            <label>
+          <div class="admin-grid admin-representative-grid">
+            <label class="representative-role">
               代表者 役職
               <input type="text" name="president_role" value="<?= h($regularFormPresidentRole); ?>" placeholder="例: 代表取締役社長">
             </label>
-            <label>
-              代表者 名
-              <input type="text" name="president_first_name" value="<?= h($regularFormPresidentFirstName); ?>" placeholder="例: 太郎">
-            </label>
-          </div>
-
-          <div class="admin-grid">
-            <label>
+            <label class="representative-last-name">
               代表者 姓
               <input type="text" name="president_last_name" value="<?= h($regularFormPresidentLastName); ?>" placeholder="例: 山田">
             </label>
-            <label>
+            <label class="representative-first-name">
+              代表者 名
+              <input type="text" name="president_first_name" value="<?= h($regularFormPresidentFirstName); ?>" placeholder="例: 太郎">
+            </label>
+            <label class="representative-alphabet">
               代表者 アルファベット表記
               <input type="text" name="president_alphabet" value="<?= h($regularFormPresidentAlphabet); ?>" placeholder="例: TARO YAMADA">
             </label>

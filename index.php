@@ -297,7 +297,7 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
 
                   <?php if (!empty($member['url'])): ?>
                     <a href="<?= h((string)$member['url']); ?>" target="_blank" rel="noopener">
-                      ホームページを見る
+                      WEBサイトを見る
                     </a>
                   <?php endif; ?>
                 </article>

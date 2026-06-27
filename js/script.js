@@ -8,25 +8,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let current = 0;
 
-  slides.forEach((slide, index) => {
-    slide.style.opacity = index === 0 ? "1" : "0";
-    slide.style.transition = "opacity 1.2s ease";
-  });
+  if (slides.length > 0) {
+    slides.forEach((slide, index) => {
+      slide.style.opacity = index === 0 ? "1" : "0";
+      slide.style.transition = "opacity 1.2s ease";
+    });
 
-  function changeSlide() {
+    function changeSlide() {
 
-    slides[current].style.opacity = "0";
+      slides[current].style.opacity = "0";
 
-    current++;
+      current++;
 
-    if (current >= slides.length) {
-      current = 0;
+      if (current >= slides.length) {
+        current = 0;
+      }
+
+      slides[current].style.opacity = "1";
     }
 
-    slides[current].style.opacity = "1";
+    setInterval(changeSlide, 5000);
   }
-
-  setInterval(changeSlide, 5000);
 
 
 
@@ -37,12 +39,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const hamburger = document.querySelector(".hamburger");
   const nav = document.querySelector(".global-nav");
 
-  hamburger.addEventListener("click", () => {
+  if (hamburger && nav) {
+    hamburger.addEventListener("click", () => {
 
-    hamburger.classList.toggle("active");
-    nav.classList.toggle("active");
+      hamburger.classList.toggle("active");
+      nav.classList.toggle("active");
 
-  });
+    });
+  }
 
 
   const navLinks = document.querySelectorAll(".global-nav a");
@@ -51,8 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     link.addEventListener("click", () => {
 
-      hamburger.classList.remove("active");
-      nav.classList.remove("active");
+      if (hamburger && nav) {
+        hamburger.classList.remove("active");
+        nav.classList.remove("active");
+      }
 
     });
 
@@ -65,27 +71,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const fadeItems = document.querySelectorAll(".fadein");
 
-  const observer = new IntersectionObserver((entries) => {
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
 
-    entries.forEach(entry => {
+      entries.forEach(entry => {
 
-      if (entry.isIntersecting) {
+        if (entry.isIntersecting) {
 
-        entry.target.classList.add("show");
+          entry.target.classList.add("show");
 
-      }
+        }
 
+      });
+
+    }, {
+      threshold: 0.05
     });
 
-  }, {
-    threshold: 0.05
-  });
+    fadeItems.forEach(item => {
 
-  fadeItems.forEach(item => {
+      observer.observe(item);
 
-    observer.observe(item);
-
-  });
+    });
+  } else {
+    fadeItems.forEach(item => {
+      item.classList.add("show");
+    });
+  }
 
 
   document.querySelectorAll('.map-point').forEach(point => {

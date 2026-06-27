@@ -426,8 +426,9 @@ section>.section-inner>p {
 }
 
 .news-more {
-  display: inline-block;
-  margin: 18px 24px 0;
+  display: block;
+  width: fit-content;
+  margin: 18px auto 0;
   padding: 10px 18px;
   border-radius: 4px;
   background: var(--main);

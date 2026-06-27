@@ -87,6 +87,8 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
             全国規模でお客様をサポートできる組織づくりに取り組んでいます。
           </p>
 
+          <a href="about.php" class="btn about-more">さらに詳しく</a>
+
         </div>
 
         <div class="about-images">

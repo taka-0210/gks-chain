@@ -462,6 +462,10 @@ section>.section-inner>p {
   margin-bottom: 24px;
 }
 
+.about-more {
+  margin-top: 8px;
+}
+
 .about-images {
   position: relative;
   min-height: 420px;

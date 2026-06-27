@@ -1379,7 +1379,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
 
     .admin-status-options {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
@@ -1387,12 +1387,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      width: fit-content;
-      padding: 10px 14px;
+      width: auto;
+      min-width: 0;
+      padding: 9px 14px;
       border: 1px solid #d8dde8;
-      border-radius: 6px;
+      border-radius: 999px;
       background: #f7f8fa;
       color: var(--main);
+      line-height: 1;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .admin-status-options label:has(input:checked) {
+      border-color: var(--main);
+      background: #eef4ff;
     }
 
     .admin-status-badge {
@@ -1512,7 +1521,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
       </div>
       <?php if (is_admin_logged_in()): ?>
         <div class="admin-actions">
-          <a href="index.php" class="btn">サイトを見る</a>
+          <a href="index.php" class="btn" target="_blank" rel="noopener">サイトを見る</a>
           <a href="logout.php" class="btn">ログアウト</a>
         </div>
       <?php endif; ?>

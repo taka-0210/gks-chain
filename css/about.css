@@ -285,11 +285,48 @@
 
 @media (max-width: 600px) {
   .about-detail-section {
-    padding: 72px 20px;
+    padding: 72px 14px;
   }
 
   .about-name-box {
     padding: 24px;
+  }
+
+  .about-detail-lead {
+    margin-bottom: 32px;
+    font-size: 16px;
+    text-align: left;
+  }
+
+  .about-message-list {
+    gap: 22px;
+  }
+
+  .about-message {
+    padding: 26px 20px;
+  }
+
+  .about-message-label {
+    margin-bottom: 20px;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .about-message h3 {
+    font-size: 26px;
+  }
+
+  .about-message-role {
+    font-size: 16px;
+  }
+
+  .about-message-body {
+    margin-top: 24px;
+  }
+
+  .about-message-body p {
+    font-size: 15px;
+    line-height: 1.9;
   }
 
   .about-name-en {

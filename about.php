@@ -84,7 +84,7 @@ $chairmanMessages = load_chairman_messages();
 
   <section class="about-detail-section">
     <div class="section-inner">
-      <h2>歴代会長の言葉</h2>
+      <h2>歴代会長</h2>
       <p class="about-detail-lead">
         GKSが大切にしてきたのは、時代が変わっても地域に根ざし、仲間と学び続ける姿勢です。
       </p>

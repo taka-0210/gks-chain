@@ -26,6 +26,7 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
 
 <head>
   <meta charset="UTF-8">
+  <meta name="format-detection" content="telephone=no">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GKSチェーン協会</title>
   <link rel="stylesheet" href="css/style.css">
@@ -298,7 +299,7 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
                   <?php endif; ?>
 
                   <?php if (!empty($member['url'])): ?>
-                    <a href="<?= h((string)$member['url']); ?>" target="_blank" rel="noopener">
+                    <a class="member-website-link" href="<?= h((string)$member['url']); ?>" target="_blank" rel="noopener">
                       WEBサイトを見る
                     </a>
                   <?php endif; ?>
@@ -347,7 +348,7 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
                 <?php endif; ?>
 
                 <?php if (!empty($member['url'])): ?>
-                  <a href="<?= h((string)$member['url']); ?>" target="_blank" rel="noopener">WEBサイトを見る</a>
+                  <a class="member-website-link" href="<?= h((string)$member['url']); ?>" target="_blank" rel="noopener">WEBサイトを見る</a>
                 <?php endif; ?>
               </article>
             <?php endforeach; ?>

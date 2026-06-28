@@ -288,7 +288,7 @@
 
 /* WEBボタン */
 
-.member-company a {
+.member-company .member-website-link {
     display: inline-flex;
     align-items: center;
 
@@ -303,13 +303,13 @@
     transition: .3s;
 }
 
-.member-company a::before {
+.member-company .member-website-link::before {
     content: "→";
 
     margin-right: 8px;
 }
 
-.member-company a:hover {
+.member-company .member-website-link:hover {
     opacity: .7;
 }
 
@@ -406,7 +406,7 @@
         height: 78px;
     }
 
-    .member-company a {
+    .member-company .member-website-link {
         margin: 16px 18px 20px;
     }
 

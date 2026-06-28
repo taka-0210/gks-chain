@@ -271,15 +271,29 @@
   }
 
   .about-message-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     min-height: 0;
     padding-right: 0;
+    text-align: center;
   }
 
   .about-message-head img {
     position: static;
-    width: 112px;
-    height: 112px;
-    margin: 0 0 20px auto;
+    order: -1;
+    width: 128px;
+    height: 128px;
+    margin: 0 auto 22px;
+  }
+
+  .about-message-label {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .about-message-role {
+    text-align: center;
   }
 }
 
@@ -304,6 +318,11 @@
 
   .about-message {
     padding: 26px 20px;
+  }
+
+  .about-message-head img {
+    width: 132px;
+    height: 132px;
   }
 
   .about-message-label {

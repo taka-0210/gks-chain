@@ -605,3 +605,18 @@ function chairman_message_name(array $item): string
 {
     return trim((string)($item['last_name'] ?? '') . ' ' . (string)($item['first_name'] ?? ''));
 }
+
+function chairman_message_term_display(array $item): string
+{
+    $start = trim((string)($item['term_start'] ?? ''));
+    $end = trim((string)($item['term_end'] ?? ''));
+
+    if ($start === '' && $end === '' && !empty($item['term'])) {
+        return (string)$item['term'];
+    }
+
+    $startText = $start !== '' ? $start . '年' : '○年';
+    $endText = $end !== '' ? $end . '年' : '○年';
+
+    return $startText . '〜' . $endText;
+}

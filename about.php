@@ -98,7 +98,7 @@ $chairmanMessages = load_chairman_messages();
                 <img src="<?= h((string)$chairmanMessage['image']); ?>" alt="<?= h($chairmanName !== '' ? $chairmanName : '歴代会長'); ?>">
               <?php endif; ?>
               <div>
-                <p class="about-message-label"><?= h((string)($chairmanMessage['term'] ?? '会長')); ?></p>
+                <p class="about-message-label">会長任期 <?= h(chairman_message_term_display($chairmanMessage)); ?></p>
                 <h3><?= h($chairmanName); ?></h3>
                 <?php if (!empty($chairmanMessage['company'])): ?>
                   <p class="about-message-role"><?= h((string)$chairmanMessage['company']); ?></p>

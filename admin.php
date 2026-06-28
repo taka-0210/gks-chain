@@ -284,7 +284,8 @@ function collect_chairman_message_form_data(): array
         : trim(strip_tags((string)($_POST['existing_image'] ?? '')));
 
     return [
-        'term' => trim(strip_tags((string)($_POST['term'] ?? ''))),
+        'term_start' => trim(strip_tags((string)($_POST['term_start'] ?? ''))),
+        'term_end' => trim(strip_tags((string)($_POST['term_end'] ?? ''))),
         'company' => trim(strip_tags((string)($_POST['company'] ?? ''))),
         'last_name' => trim(strip_tags((string)($_POST['last_name'] ?? ''))),
         'first_name' => trim(strip_tags((string)($_POST['first_name'] ?? ''))),
@@ -299,8 +300,12 @@ function validate_chairman_message_form(array $data): array
 {
     $errors = [];
 
-    if ($data['term'] === '') {
-        $errors[] = '会長任期を入力してください。';
+    if ($data['term_start'] !== '' && !preg_match('/^\d{4}$/', $data['term_start'])) {
+        $errors[] = '会長任期の開始年は西暦4桁で入力してください。';
+    }
+
+    if ($data['term_end'] !== '' && !preg_match('/^\d{4}$/', $data['term_end'])) {
+        $errors[] = '会長任期の終了年は西暦4桁で入力してください。';
     }
 
     if ($data['last_name'] === '' || $data['first_name'] === '') {
@@ -1258,7 +1263,8 @@ if ($chairmanMessageEditId !== '') {
 
 $chairmanMessageFormItem = $editingChairmanMessage ?? [];
 $isChairmanMessageEditing = $editingChairmanMessage !== null;
-$chairmanMessageFormTerm = (string)($_POST['term'] ?? ($chairmanMessageFormItem['term'] ?? ''));
+$chairmanMessageFormTermStart = (string)($_POST['term_start'] ?? ($chairmanMessageFormItem['term_start'] ?? ''));
+$chairmanMessageFormTermEnd = (string)($_POST['term_end'] ?? ($chairmanMessageFormItem['term_end'] ?? ''));
 $chairmanMessageFormCompany = (string)($_POST['company'] ?? ($chairmanMessageFormItem['company'] ?? ''));
 $chairmanMessageFormLastName = (string)($_POST['last_name'] ?? ($chairmanMessageFormItem['last_name'] ?? ''));
 $chairmanMessageFormFirstName = (string)($_POST['first_name'] ?? ($chairmanMessageFormItem['first_name'] ?? ''));
@@ -2141,8 +2147,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
 
           <div class="admin-grid">
             <label>
-              会長任期
-              <input type="text" name="term" value="<?= h($chairmanMessageFormTerm); ?>" placeholder="例: 前会長 / 第5代会長 / 1998年〜2004年" required>
+              会長任期 開始年
+              <input type="number" name="term_start" value="<?= h($chairmanMessageFormTermStart); ?>" min="1900" max="2100" placeholder="例: 1979">
+            </label>
+
+            <label>
+              会長任期 終了年
+              <input type="number" name="term_end" value="<?= h($chairmanMessageFormTermEnd); ?>" min="1900" max="2100" placeholder="例: 1985">
             </label>
 
             <label>
@@ -2217,7 +2228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
             <?php foreach ($chairmanMessagesAdmin as $chairmanMessage): ?>
               <tr>
                 <td><?= h((string)($chairmanMessage['sort_order'] ?? '')); ?></td>
-                <td><?= h((string)($chairmanMessage['term'] ?? '')); ?></td>
+                <td><?= h(chairman_message_term_display($chairmanMessage)); ?></td>
                 <td><?= h(chairman_message_name($chairmanMessage)); ?></td>
                 <td><?= h((string)($chairmanMessage['company'] ?? '')); ?></td>
                 <td><?= !empty($chairmanMessage['published']) ? '公開' : '非公開'; ?></td>

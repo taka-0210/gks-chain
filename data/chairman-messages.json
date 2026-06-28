@@ -1,8 +1,9 @@
 [
     {
         "id": "chairman_fukasawa",
-        "term": "前会長",
-        "company": "三栄コーポレーション",
+        "term_start": "",
+        "term_end": "",
+        "company": "株式会社 三栄コーポレーションリミテッド",
         "last_name": "深澤",
         "first_name": "信生",
         "image": "",
@@ -12,8 +13,9 @@
     },
     {
         "id": "chairman_fukui",
-        "term": "会長",
-        "company": "",
+        "term_start": "",
+        "term_end": "",
+        "company": "株式会社 福井厨房",
         "last_name": "福井",
         "first_name": "正晃",
         "image": "",

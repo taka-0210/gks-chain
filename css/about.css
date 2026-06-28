@@ -65,6 +65,11 @@
   text-align: center;
 }
 
+.about-name-en span {
+  color: #f28c28;
+  font-size: 1.18em;
+}
+
 .about-name-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

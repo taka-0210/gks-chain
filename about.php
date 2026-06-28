@@ -30,13 +30,16 @@ $chairmanMessages = load_chairman_messages();
 
   <section class="about-detail-section">
     <div class="section-inner">
-      <h2>GKSは何の略か</h2>
+      <h2>GKSという名前に込めた意味</h2>
       <p class="about-detail-lead">
         GKSは、厨房設備業界に関わる企業が互いに支え合い、全国規模で価値を生み出すための考え方を表しています。
       </p>
 
       <div class="about-name-box">
-        <p class="about-name-en">GENERAL KITCHEN SYSTEM<br>&amp; SUPPLIERS CHAIN ASSOCIATION</p>
+        <p class="about-name-en">
+          <span>G</span>ENERAL <span>K</span>ITCHEN <span>S</span>YSTEM<br>
+          &amp; <span>S</span>UPPLIERS CHAIN ASSOCIATION
+        </p>
         <div class="about-name-list">
           <div>
             <strong>General</strong>

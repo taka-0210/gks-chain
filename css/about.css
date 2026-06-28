@@ -126,6 +126,22 @@
   box-shadow: var(--shadow);
 }
 
+.about-message-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.about-message-head img {
+  width: 92px;
+  height: 92px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #eef4ff;
+  background: #f7f8fa;
+}
+
 .about-message-label {
   width: fit-content;
   margin-bottom: 12px;
@@ -248,6 +264,10 @@
 
   .about-story-image img {
     height: 300px;
+  }
+
+  .about-message-head {
+    align-items: flex-start;
   }
 }
 

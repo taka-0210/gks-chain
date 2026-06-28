@@ -14,11 +14,13 @@
 - `data/news.json`
 - `data/regular-members.json`
 - `data/support-members.json`
+- `data/chairman-messages.json`
 - `data/settings.json`
 - `image/news/`
 - `image/fv/`
 - `image/logo/`
 - `image/member/president/`
+- `image/chairman-message/`
 
 ## アップロード後の確認
 

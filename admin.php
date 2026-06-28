@@ -6,7 +6,7 @@ require_once __DIR__ . '/config.php';
 
 $errors = [];
 $message = '';
-$allowedSections = ['news', 'regular_members', 'support_members', 'settings'];
+$allowedSections = ['news', 'regular_members', 'support_members', 'chairman_messages', 'settings'];
 $section = (string)($_GET['section'] ?? 'news');
 
 if (!empty($_SESSION['admin_message'])) {
@@ -272,6 +272,43 @@ function validate_support_member_form(array $data): array
 
     if ($data['company'] === '') {
         $errors[] = '会社名を入力してください。';
+    }
+
+    return $errors;
+}
+
+function collect_chairman_message_form_data(): array
+{
+    $image = !empty($_POST['remove_image'])
+        ? ''
+        : trim(strip_tags((string)($_POST['existing_image'] ?? '')));
+
+    return [
+        'term' => trim(strip_tags((string)($_POST['term'] ?? ''))),
+        'company' => trim(strip_tags((string)($_POST['company'] ?? ''))),
+        'last_name' => trim(strip_tags((string)($_POST['last_name'] ?? ''))),
+        'first_name' => trim(strip_tags((string)($_POST['first_name'] ?? ''))),
+        'image' => $image,
+        'message' => trim((string)($_POST['message'] ?? '')),
+        'sort_order' => (int)($_POST['sort_order'] ?? 9999),
+        'published' => !empty($_POST['published']),
+    ];
+}
+
+function validate_chairman_message_form(array $data): array
+{
+    $errors = [];
+
+    if ($data['term'] === '') {
+        $errors[] = '会長任期を入力してください。';
+    }
+
+    if ($data['last_name'] === '' || $data['first_name'] === '') {
+        $errors[] = '姓と名を入力してください。';
+    }
+
+    if ($data['message'] === '') {
+        $errors[] = 'メッセージを入力してください。';
     }
 
     return $errors;
@@ -692,6 +729,68 @@ function apply_regular_president_image(array $data, string $uploadedImage): arra
     return $data;
 }
 
+function handle_chairman_message_image_upload(): array
+{
+    if (empty($_FILES['image'])) {
+        return ['', []];
+    }
+
+    $file = $_FILES['image'];
+    $fileError = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+
+    if ($fileError === UPLOAD_ERR_NO_FILE) {
+        return ['', []];
+    }
+
+    if ($fileError !== UPLOAD_ERR_OK) {
+        return ['', ['顔写真のアップロードに失敗しました。']];
+    }
+
+    $fileSize = (int)($file['size'] ?? 0);
+
+    if ($fileSize > 5 * 1024 * 1024) {
+        return ['', ['顔写真は5MB以内にしてください。']];
+    }
+
+    $tmpName = (string)($file['tmp_name'] ?? '');
+    $imageInfo = $tmpName !== '' ? @getimagesize($tmpName) : false;
+    $allowedTypes = [
+        IMAGETYPE_JPEG => 'jpg',
+        IMAGETYPE_PNG => 'png',
+        IMAGETYPE_GIF => 'gif',
+        IMAGETYPE_WEBP => 'webp',
+    ];
+
+    if ($imageInfo === false || !isset($allowedTypes[$imageInfo[2]])) {
+        return ['', ['顔写真にアップロードできる画像は JPG / PNG / GIF / WebP です。']];
+    }
+
+    $uploadDir = __DIR__ . '/image/chairman-message';
+
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true)) {
+        return ['', ['顔写真保存フォルダを作成できませんでした。']];
+    }
+
+    $extension = $allowedTypes[$imageInfo[2]];
+    $fileName = 'chairman_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
+    $destination = $uploadDir . '/' . $fileName;
+
+    if (!move_uploaded_file($tmpName, $destination)) {
+        return ['', ['顔写真を保存できませんでした。']];
+    }
+
+    return ['image/chairman-message/' . $fileName, []];
+}
+
+function apply_chairman_message_image(array $data, string $uploadedImage): array
+{
+    if ($uploadedImage !== '') {
+        $data['image'] = $uploadedImage;
+    }
+
+    return $data;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login') {
     require_csrf();
 
@@ -929,6 +1028,81 @@ if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['ac
     }
 }
 
+if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chairman_message_create') {
+    require_csrf();
+
+    $data = collect_chairman_message_form_data();
+    [$uploadedImage, $imageErrors] = handle_chairman_message_image_upload();
+    $errors = array_merge($errors, $imageErrors);
+    $data = apply_chairman_message_image($data, $uploadedImage);
+    $errors = array_merge($errors, validate_chairman_message_form($data));
+
+    if (!$errors) {
+        $items = load_chairman_messages(false);
+        array_unshift($items, array_merge($data, [
+            'id' => 'chairman_' . date('Ymd_His'),
+        ]));
+
+        if (save_chairman_messages($items)) {
+            redirect_admin('chairman_messages', '歴代会長の言葉を保存しました。');
+        } else {
+            $errors[] = '歴代会長の言葉の保存に失敗しました。';
+        }
+    }
+}
+
+if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chairman_message_update') {
+    require_csrf();
+
+    $id = (string)($_POST['id'] ?? '');
+    $data = collect_chairman_message_form_data();
+    [$uploadedImage, $imageErrors] = handle_chairman_message_image_upload();
+    $errors = array_merge($errors, $imageErrors);
+    $data = apply_chairman_message_image($data, $uploadedImage);
+    $errors = array_merge($errors, validate_chairman_message_form($data));
+
+    if ($id === '') {
+        $errors[] = '編集する歴代会長の言葉が見つかりません。';
+    }
+
+    if (!$errors) {
+        $items = load_chairman_messages(false);
+        $updated = false;
+
+        foreach ($items as &$item) {
+            if ((string)($item['id'] ?? '') === $id) {
+                $item = array_merge($item, $data, ['id' => $id]);
+                $updated = true;
+                break;
+            }
+        }
+        unset($item);
+
+        if (!$updated) {
+            $errors[] = '編集する歴代会長の言葉が見つかりません。';
+        } elseif (save_chairman_messages($items)) {
+            redirect_admin('chairman_messages', '歴代会長の言葉を更新しました。');
+        } else {
+            $errors[] = '歴代会長の言葉の更新に失敗しました。';
+        }
+    }
+}
+
+if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chairman_message_delete') {
+    require_csrf();
+
+    $id = (string)($_POST['id'] ?? '');
+    $items = array_values(array_filter(load_chairman_messages(false), function ($item) use ($id) {
+        return (string)($item['id'] ?? '') !== $id;
+    }));
+
+    if (save_chairman_messages($items)) {
+        redirect_admin('chairman_messages', '歴代会長の言葉を削除しました。');
+    } else {
+        $errors[] = '歴代会長の言葉の削除に失敗しました。';
+    }
+}
+
 if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'settings_update') {
     require_csrf();
 
@@ -961,6 +1135,9 @@ $editingRegularMember = null;
 $supportMembersAdmin = is_admin_logged_in() && $section === 'support_members' ? load_support_members(false) : [];
 $supportEditId = is_admin_logged_in() && $section === 'support_members' ? (string)($_GET['edit'] ?? '') : '';
 $editingSupportMember = null;
+$chairmanMessagesAdmin = is_admin_logged_in() && $section === 'chairman_messages' ? load_chairman_messages(false) : [];
+$chairmanMessageEditId = is_admin_logged_in() && $section === 'chairman_messages' ? (string)($_GET['edit'] ?? '') : '';
+$editingChairmanMessage = null;
 $siteSettings = is_admin_logged_in() && $section === 'settings' ? load_site_settings() : default_site_settings();
 
 if ($editId !== '') {
@@ -1065,6 +1242,36 @@ $supportFormSortOrder = (string)($_POST['sort_order'] ?? ($supportFormItem['sort
 $supportFormPublished = $_SERVER['REQUEST_METHOD'] === 'POST'
     ? !empty($_POST['published'])
     : ($isSupportEditing ? !empty($supportFormItem['published']) : true);
+
+if ($chairmanMessageEditId !== '') {
+    foreach ($chairmanMessagesAdmin as $chairmanMessage) {
+        if ((string)($chairmanMessage['id'] ?? '') === $chairmanMessageEditId) {
+            $editingChairmanMessage = $chairmanMessage;
+            break;
+        }
+    }
+
+    if ($editingChairmanMessage === null) {
+        $errors[] = '編集する歴代会長の言葉が見つかりません。';
+    }
+}
+
+$chairmanMessageFormItem = $editingChairmanMessage ?? [];
+$isChairmanMessageEditing = $editingChairmanMessage !== null;
+$chairmanMessageFormTerm = (string)($_POST['term'] ?? ($chairmanMessageFormItem['term'] ?? ''));
+$chairmanMessageFormCompany = (string)($_POST['company'] ?? ($chairmanMessageFormItem['company'] ?? ''));
+$chairmanMessageFormLastName = (string)($_POST['last_name'] ?? ($chairmanMessageFormItem['last_name'] ?? ''));
+$chairmanMessageFormFirstName = (string)($_POST['first_name'] ?? ($chairmanMessageFormItem['first_name'] ?? ''));
+$chairmanMessageFormImage = (string)($_POST['existing_image'] ?? ($chairmanMessageFormItem['image'] ?? ''));
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array(($_POST['action'] ?? ''), ['chairman_message_create', 'chairman_message_update'], true) && isset($data['image'])) {
+    $chairmanMessageFormImage = (string)$data['image'];
+}
+$chairmanMessageFormMessage = (string)($_POST['message'] ?? ($chairmanMessageFormItem['message'] ?? ''));
+$chairmanMessageFormSortOrder = (string)($_POST['sort_order'] ?? ($chairmanMessageFormItem['sort_order'] ?? (count($chairmanMessagesAdmin) + 1)));
+$chairmanMessageFormPublished = $_SERVER['REQUEST_METHOD'] === 'POST'
+    ? !empty($_POST['published'])
+    : ($isChairmanMessageEditing ? !empty($chairmanMessageFormItem['published']) : true);
+
 $settingsMapGroupDistance = (string)($_POST['map_group_distance'] ?? ($siteSettings['map_group_distance'] ?? MAP_GROUP_DISTANCE));
 $settingsMapGroupDistanceMobile = (string)($_POST['map_group_distance_mobile'] ?? ($siteSettings['map_group_distance_mobile'] ?? MAP_GROUP_DISTANCE_MOBILE));
 $settingsMapDotSize = (string)($_POST['map_dot_size'] ?? ($siteSettings['map_dot_size'] ?? MAP_DOT_SIZE));
@@ -1532,6 +1739,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
         <a href="admin.php?section=news" class="<?= $section === 'news' ? 'active' : ''; ?>">最新情報管理</a>
         <a href="admin.php?section=regular_members" class="<?= $section === 'regular_members' ? 'active' : ''; ?>">正会員情報管理</a>
         <a href="admin.php?section=support_members" class="<?= $section === 'support_members' ? 'active' : ''; ?>">賛助会員情報管理</a>
+        <a href="admin.php?section=chairman_messages" class="<?= $section === 'chairman_messages' ? 'active' : ''; ?>">歴代会長の言葉管理</a>
         <a href="admin.php?section=settings" class="<?= $section === 'settings' ? 'active' : ''; ?>">サイト設定</a>
       </nav>
     <?php endif; ?>
@@ -1911,6 +2119,115 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
                       <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf']); ?>">
                       <input type="hidden" name="action" value="support_delete">
                       <input type="hidden" name="id" value="<?= h((string)($member['id'] ?? '')); ?>">
+                      <button class="admin-delete-button" type="submit">削除</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </section>
+    <?php elseif ($section === 'chairman_messages'): ?>
+      <section class="admin-panel">
+        <h2><?= $isChairmanMessageEditing ? '歴代会長の言葉 編集' : '歴代会長の言葉 新規登録'; ?></h2>
+        <form class="admin-form" method="POST" enctype="multipart/form-data">
+          <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf']); ?>">
+          <input type="hidden" name="action" value="<?= $isChairmanMessageEditing ? 'chairman_message_update' : 'chairman_message_create'; ?>">
+          <input type="hidden" name="existing_image" value="<?= h($chairmanMessageFormImage); ?>">
+          <?php if ($isChairmanMessageEditing): ?>
+            <input type="hidden" name="id" value="<?= h((string)($editingChairmanMessage['id'] ?? '')); ?>">
+          <?php endif; ?>
+
+          <div class="admin-grid">
+            <label>
+              会長任期
+              <input type="text" name="term" value="<?= h($chairmanMessageFormTerm); ?>" placeholder="例: 前会長 / 第5代会長 / 1998年〜2004年" required>
+            </label>
+
+            <label>
+              表示順
+              <input type="number" name="sort_order" value="<?= h($chairmanMessageFormSortOrder); ?>" min="1">
+            </label>
+          </div>
+
+          <label>
+            会社名
+            <input type="text" name="company" value="<?= h($chairmanMessageFormCompany); ?>" placeholder="例: 三栄コーポレーション">
+          </label>
+
+          <div class="admin-representative-grid">
+            <label class="representative-last-name">
+              姓
+              <input type="text" name="last_name" value="<?= h($chairmanMessageFormLastName); ?>" required>
+            </label>
+
+            <label class="representative-first-name">
+              名
+              <input type="text" name="first_name" value="<?= h($chairmanMessageFormFirstName); ?>" required>
+            </label>
+          </div>
+
+          <label>
+            顔写真
+            <?php if ($chairmanMessageFormImage !== ''): ?>
+              <img class="admin-image-preview" src="<?= h($chairmanMessageFormImage); ?>" alt="<?= h(trim($chairmanMessageFormLastName . ' ' . $chairmanMessageFormFirstName)); ?>">
+              <label class="admin-check">
+                <input type="checkbox" name="remove_image" value="1">
+                登録済み写真を削除する
+              </label>
+            <?php endif; ?>
+            <input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp">
+            <span class="admin-help">JPG / PNG / GIF / WebP、5MB以内。新しい写真を選ぶと差し替わります。</span>
+          </label>
+
+          <label>
+            メッセージ
+            <textarea name="message" required><?= h($chairmanMessageFormMessage); ?></textarea>
+          </label>
+
+          <label class="admin-check">
+            <input type="checkbox" name="published" value="1" <?= $chairmanMessageFormPublished ? 'checked' : ''; ?>>
+            公開する
+          </label>
+
+          <div class="admin-actions">
+            <button type="submit"><?= $isChairmanMessageEditing ? '更新する' : '保存する'; ?></button>
+            <?php if ($isChairmanMessageEditing): ?>
+              <a href="admin.php?section=chairman_messages" class="btn">新規登録に戻る</a>
+            <?php endif; ?>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel">
+        <h2>歴代会長の言葉一覧</h2>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>順</th>
+              <th>任期</th>
+              <th>氏名</th>
+              <th>会社名</th>
+              <th>状態</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($chairmanMessagesAdmin as $chairmanMessage): ?>
+              <tr>
+                <td><?= h((string)($chairmanMessage['sort_order'] ?? '')); ?></td>
+                <td><?= h((string)($chairmanMessage['term'] ?? '')); ?></td>
+                <td><?= h(chairman_message_name($chairmanMessage)); ?></td>
+                <td><?= h((string)($chairmanMessage['company'] ?? '')); ?></td>
+                <td><?= !empty($chairmanMessage['published']) ? '公開' : '非公開'; ?></td>
+                <td>
+                  <div class="admin-table-actions">
+                    <a class="admin-edit-link" href="admin.php?section=chairman_messages&edit=<?= h((string)($chairmanMessage['id'] ?? '')); ?>">編集</a>
+                    <form method="POST" onsubmit="return confirm('この歴代会長の言葉を削除しますか？');">
+                      <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf']); ?>">
+                      <input type="hidden" name="action" value="chairman_message_delete">
+                      <input type="hidden" name="id" value="<?= h((string)($chairmanMessage['id'] ?? '')); ?>">
                       <button class="admin-delete-button" type="submit">削除</button>
                     </form>
                   </div>

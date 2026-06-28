@@ -8,6 +8,7 @@ const ADMIN_PASSWORD_HASH = '$2y$10$RellX.I9yZkd.9BVlum4B.g6Ps7FP2AgZvnThA5JR/gu
 const NEWS_DATA_FILE = __DIR__ . '/data/news.json';
 const REGULAR_MEMBERS_DATA_FILE = __DIR__ . '/data/regular-members.json';
 const SUPPORT_MEMBERS_DATA_FILE = __DIR__ . '/data/support-members.json';
+const CHAIRMAN_MESSAGES_DATA_FILE = __DIR__ . '/data/chairman-messages.json';
 const SETTINGS_DATA_FILE = __DIR__ . '/data/settings.json';
 const MAP_GROUP_DISTANCE = 2.5;
 const MAP_GROUP_DISTANCE_MOBILE = 4.0;
@@ -561,4 +562,46 @@ function save_support_members(array $items): bool
     $json = json_encode($items, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     return file_put_contents(SUPPORT_MEMBERS_DATA_FILE, $json . PHP_EOL, LOCK_EX) !== false;
+}
+
+function load_chairman_messages(bool $publishedOnly = true): array
+{
+    if (!is_file(CHAIRMAN_MESSAGES_DATA_FILE)) {
+        return [];
+    }
+
+    $json = file_get_contents(CHAIRMAN_MESSAGES_DATA_FILE);
+    $items = json_decode($json ?: '[]', true);
+
+    if (!is_array($items)) {
+        return [];
+    }
+
+    if ($publishedOnly) {
+        $items = array_values(array_filter($items, function ($item) {
+            return !empty($item['published']);
+        }));
+    }
+
+    usort($items, function ($a, $b) {
+        return ((int)($a['sort_order'] ?? 9999)) <=> ((int)($b['sort_order'] ?? 9999));
+    });
+
+    return $items;
+}
+
+function save_chairman_messages(array $items): bool
+{
+    usort($items, function ($a, $b) {
+        return ((int)($a['sort_order'] ?? 9999)) <=> ((int)($b['sort_order'] ?? 9999));
+    });
+
+    $json = json_encode($items, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    return file_put_contents(CHAIRMAN_MESSAGES_DATA_FILE, $json . PHP_EOL, LOCK_EX) !== false;
+}
+
+function chairman_message_name(array $item): string
+{
+    return trim((string)($item['last_name'] ?? '') . ' ' . (string)($item['first_name'] ?? ''));
 }

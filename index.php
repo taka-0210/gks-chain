@@ -49,6 +49,8 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
       <?php endforeach; ?>
     </div>
 
+    <div class="fv-blue-triangle" aria-hidden="true"></div>
+
     <div class="fv-text">
       <p>全国の厨房設備会社が<br class="sp-only">集うネットワーク</p>
       <h2>学び、<br class="sp-only">つながり、<br class="sp-only">成長する。</h2>

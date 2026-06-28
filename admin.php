@@ -6,7 +6,7 @@ require_once __DIR__ . '/config.php';
 
 $errors = [];
 $message = '';
-$allowedSections = ['news', 'regular_members', 'support_members', 'chairman_messages', 'settings'];
+$allowedSections = ['news', 'regular_members', 'support_members', 'member_content', 'chairman_messages', 'settings'];
 $section = (string)($_GET['section'] ?? 'news');
 
 if (!empty($_SESSION['admin_message'])) {
@@ -367,6 +367,29 @@ function collect_settings_form_data(): array
         'map_dot_spread_mobile' => (float)($_POST['map_dot_spread_mobile'] ?? MAP_DOT_SPREAD_MOBILE),
         'map_dot_multi_spread' => (float)($_POST['map_dot_multi_spread'] ?? MAP_DOT_MULTI_SPREAD),
         'map_dot_multi_spread_mobile' => (float)($_POST['map_dot_multi_spread_mobile'] ?? MAP_DOT_MULTI_SPREAD_MOBILE),
+    ];
+}
+
+function collect_member_content_admin_data(): array
+{
+    $status = (string)($_POST['status'] ?? 'pending');
+    $visibility = (string)($_POST['visibility'] ?? 'all');
+
+    if (!in_array($status, ['pending', 'published', 'hidden'], true)) {
+        $status = 'pending';
+    }
+
+    if (!in_array($visibility, ['all', 'regular', 'support'], true)) {
+        $visibility = 'all';
+    }
+
+    return [
+        'status' => $status,
+        'visibility' => $visibility,
+        'publish_start' => trim(strip_tags((string)($_POST['publish_start'] ?? ''))),
+        'publish_end' => trim(strip_tags((string)($_POST['publish_end'] ?? ''))),
+        'admin_note' => trim(strip_tags((string)($_POST['admin_note'] ?? ''))),
+        'updated_at' => date('Y-m-d H:i:s'),
     ];
 }
 
@@ -1033,6 +1056,58 @@ if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['ac
     }
 }
 
+if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'member_content_update') {
+    require_csrf();
+
+    $id = (string)($_POST['id'] ?? '');
+    $data = collect_member_content_admin_data();
+
+    if ($id === '') {
+        $errors[] = '更新する会員投稿が見つかりません。';
+    }
+
+    if ($data['publish_start'] !== '' && $data['publish_end'] !== '' && $data['publish_start'] > $data['publish_end']) {
+        $errors[] = '公開終了日は公開開始日以降にしてください。';
+    }
+
+    if (!$errors) {
+        $items = load_member_content(false);
+        $updated = false;
+
+        foreach ($items as &$item) {
+            if ((string)($item['id'] ?? '') === $id) {
+                $item = array_merge($item, $data);
+                $updated = true;
+                break;
+            }
+        }
+        unset($item);
+
+        if (!$updated) {
+            $errors[] = '更新する会員投稿が見つかりません。';
+        } elseif (save_member_content($items)) {
+            redirect_admin('member_content', '会員投稿を更新しました。');
+        } else {
+            $errors[] = '会員投稿の更新に失敗しました。';
+        }
+    }
+}
+
+if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'member_content_delete') {
+    require_csrf();
+
+    $id = (string)($_POST['id'] ?? '');
+    $items = array_values(array_filter(load_member_content(false), function ($item) use ($id) {
+        return (string)($item['id'] ?? '') !== $id;
+    }));
+
+    if (save_member_content($items)) {
+        redirect_admin('member_content', '会員投稿を削除しました。');
+    } else {
+        $errors[] = '会員投稿の削除に失敗しました。';
+    }
+}
+
 if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chairman_message_create') {
     require_csrf();
 
@@ -1140,6 +1215,7 @@ $editingRegularMember = null;
 $supportMembersAdmin = is_admin_logged_in() && $section === 'support_members' ? load_support_members(false) : [];
 $supportEditId = is_admin_logged_in() && $section === 'support_members' ? (string)($_GET['edit'] ?? '') : '';
 $editingSupportMember = null;
+$memberContentAdmin = is_admin_logged_in() && $section === 'member_content' ? load_member_content(false) : [];
 $chairmanMessagesAdmin = is_admin_logged_in() && $section === 'chairman_messages' ? load_chairman_messages(false) : [];
 $chairmanMessageEditId = is_admin_logged_in() && $section === 'chairman_messages' ? (string)($_GET['edit'] ?? '') : '';
 $editingChairmanMessage = null;
@@ -1397,6 +1473,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
     }
 
     .admin-form input,
+    .admin-form select,
     .admin-form textarea {
       width: 100%;
       padding: 12px 14px;
@@ -1633,6 +1710,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
       color: #176236;
     }
 
+    .admin-status-badge.pending {
+      background: #fff3df;
+      color: #8a4b00;
+    }
+
+    .admin-status-badge.hidden {
+      background: #eeeeee;
+      color: #555;
+    }
+
     .admin-status-badge.draft {
       background: #fff3df;
       color: #8a4b00;
@@ -1745,6 +1832,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
         <a href="admin.php?section=news" class="<?= $section === 'news' ? 'active' : ''; ?>">最新情報管理</a>
         <a href="admin.php?section=regular_members" class="<?= $section === 'regular_members' ? 'active' : ''; ?>">正会員情報管理</a>
         <a href="admin.php?section=support_members" class="<?= $section === 'support_members' ? 'active' : ''; ?>">賛助会員情報管理</a>
+        <a href="admin.php?section=member_content" class="<?= $section === 'member_content' ? 'active' : ''; ?>">会員投稿管理</a>
         <a href="admin.php?section=chairman_messages" class="<?= $section === 'chairman_messages' ? 'active' : ''; ?>">歴代会長情報管理</a>
         <a href="admin.php?section=settings" class="<?= $section === 'settings' ? 'active' : ''; ?>">サイト設定</a>
       </nav>
@@ -2128,6 +2216,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
                       <button class="admin-delete-button" type="submit">削除</button>
                     </form>
                   </div>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </section>
+    <?php elseif ($section === 'member_content'): ?>
+      <section class="admin-panel">
+        <h2>会員投稿一覧</h2>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>投稿</th>
+              <th>会社</th>
+              <th>公開設定</th>
+              <th>添付</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($memberContentAdmin as $item): ?>
+              <tr>
+                <td>
+                  <strong><?= h((string)($item['title'] ?? '')); ?></strong><br>
+                  <span class="admin-help"><?= h(member_content_category_label((string)($item['category'] ?? 'service'))); ?> / <?= h((string)($item['created_at'] ?? '')); ?></span><br>
+                  <?= h(member_content_excerpt((string)($item['body'] ?? ''), 70)); ?>
+                </td>
+                <td>
+                  <?= h((string)($item['company'] ?? '')); ?><br>
+                  <span class="admin-help"><?= h(member_type_label((string)($item['member_type'] ?? 'regular'))); ?></span>
+                </td>
+                <td>
+                  <span class="admin-status-badge <?= h((string)($item['status'] ?? 'pending')); ?>"><?= h(member_content_status_label((string)($item['status'] ?? 'pending'))); ?></span><br>
+                  <span class="admin-help"><?= h(member_content_visibility_label((string)($item['visibility'] ?? 'all'))); ?></span>
+                </td>
+                <td>
+                  <?php if (!empty($item['image'])): ?>
+                    <a class="admin-edit-link" href="<?= h((string)$item['image']); ?>" target="_blank" rel="noopener">画像</a>
+                  <?php endif; ?>
+                  <?php if (!empty($item['attachment'])): ?>
+                    <a class="admin-edit-link" href="<?= h((string)$item['attachment']); ?>" target="_blank" rel="noopener">PDF</a>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <form class="admin-form" method="POST">
+                    <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf']); ?>">
+                    <input type="hidden" name="action" value="member_content_update">
+                    <input type="hidden" name="id" value="<?= h((string)($item['id'] ?? '')); ?>">
+                    <label>
+                      状態
+                      <select name="status">
+                        <?php foreach (['pending', 'published', 'hidden'] as $statusOption): ?>
+                          <option value="<?= h($statusOption); ?>" <?= ($item['status'] ?? 'pending') === $statusOption ? 'selected' : ''; ?>><?= h(member_content_status_label($statusOption)); ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                    </label>
+                    <label>
+                      公開範囲
+                      <select name="visibility">
+                        <?php foreach (['all', 'regular', 'support'] as $visibilityOption): ?>
+                          <option value="<?= h($visibilityOption); ?>" <?= ($item['visibility'] ?? 'all') === $visibilityOption ? 'selected' : ''; ?>><?= h(member_content_visibility_label($visibilityOption)); ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                    </label>
+                    <div class="admin-grid">
+                      <label>
+                        開始日
+                        <input type="date" name="publish_start" value="<?= h((string)($item['publish_start'] ?? '')); ?>">
+                      </label>
+                      <label>
+                        終了日
+                        <input type="date" name="publish_end" value="<?= h((string)($item['publish_end'] ?? '')); ?>">
+                      </label>
+                    </div>
+                    <label>
+                      管理メモ
+                      <textarea name="admin_note"><?= h((string)($item['admin_note'] ?? '')); ?></textarea>
+                    </label>
+                    <div class="admin-table-actions">
+                      <button type="submit">更新</button>
+                    </div>
+                  </form>
+                  <form method="POST" onsubmit="return confirm('この会員投稿を削除しますか？');">
+                    <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf']); ?>">
+                    <input type="hidden" name="action" value="member_content_delete">
+                    <input type="hidden" name="id" value="<?= h((string)($item['id'] ?? '')); ?>">
+                    <button type="submit" class="admin-delete-button">削除</button>
+                  </form>
                 </td>
               </tr>
             <?php endforeach; ?>

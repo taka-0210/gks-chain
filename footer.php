@@ -21,6 +21,7 @@ $footerLogo = site_footer_logo();
             <li><a href="index.php#member-list">会員企業</a></li>
             <li><a href="index.php#support-member">賛助会員企業</a></li>
             <li><a href="organization.php">組織体制</a></li>
+            <li><a href="member.php">会員専用</a></li>
             <li><a href="index.php#contact">お問い合わせ</a></li>
           </ul>
         </nav>

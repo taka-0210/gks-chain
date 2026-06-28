@@ -1,0 +1,18 @@
+[
+  {
+    "id": "regular_demo",
+    "login_id": "regular-demo",
+    "password_hash": "$2y$10$HlM7r5tFhU7Nr80GYxttsOhrKAYYpnU92HH7woemYTVrJmNW9Lkb2",
+    "company": "GKS正会員デモ株式会社",
+    "type": "regular",
+    "active": true
+  },
+  {
+    "id": "support_demo",
+    "login_id": "support-demo",
+    "password_hash": "$2y$10$HlM7r5tFhU7Nr80GYxttsOhrKAYYpnU92HH7woemYTVrJmNW9Lkb2",
+    "company": "GKS賛助会員デモ株式会社",
+    "type": "support",
+    "active": true
+  }
+]

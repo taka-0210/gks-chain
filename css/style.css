@@ -266,7 +266,7 @@ ul {
   position: absolute;
   inset: 0;
   background-image: radial-gradient(var(--sub) 1px, transparent 1px);
-  background-size: 18px 18px;
+  background-size: 14px 14px;
   opacity: 0.18;
   z-index: 3;
 }
@@ -277,12 +277,28 @@ ul {
     bottom: -190px;
     width: min(46vw, 650px);
     aspect-ratio: 1 / 1;
-    background: linear-gradient(135deg, rgba(15, 45, 99, 0.72) 0%, rgba(30, 78, 168, 0.56) 55%, rgba(80, 132, 214, 0.34) 100%);
+    background: #0f2d63;
     clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    -webkit-mask-image: linear-gradient(135deg, transparent 0%, rgba(0, 0, 0, 0.18) 28%, rgba(0, 0, 0, 0.72) 64%, #000 100%);
+    mask-image: linear-gradient(135deg, transparent 0%, rgba(0, 0, 0, 0.18) 28%, rgba(0, 0, 0, 0.72) 64%, #000 100%);
     z-index: 3;
     opacity: 0.82;
     filter: drop-shadow(-22px -22px 44px rgba(15, 45, 99, 0.14));
     pointer-events: none;
+}
+
+.fv-blue-triangle--top {
+    left: -92px;
+    top: -132px;
+    right: auto;
+    bottom: auto;
+    width: min(30vw, 423px);
+    background: #0f2d63;
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    -webkit-mask-image: linear-gradient(315deg, transparent 0%, rgba(0, 0, 0, 0.16) 30%, rgba(0, 0, 0, 0.62) 66%, #000 100%);
+    mask-image: linear-gradient(315deg, transparent 0%, rgba(0, 0, 0, 0.16) 30%, rgba(0, 0, 0, 0.62) 66%, #000 100%);
+    opacity: 0.68;
+    filter: drop-shadow(18px 18px 34px rgba(15, 45, 99, 0.1));
 }
 
 .fv-text {
@@ -1133,7 +1149,16 @@ section>.section-inner>p {
         right: -120px;
         bottom: -150px;
         width: min(70vw, 460px);
-        opacity: 0.58;
+        opacity: 0.64;
+    }
+
+    .fv-blue-triangle--top {
+        left: -88px;
+        top: -98px;
+        right: auto;
+        bottom: auto;
+        width: min(45vw, 300px);
+        opacity: 0.5;
     }
 
   .fv-text h2 {
@@ -1200,7 +1225,16 @@ section>.section-inner>p {
         right: -110px;
         bottom: -110px;
         width: 82vw;
-        opacity: 0.46;
+        opacity: 0.52;
+    }
+
+    .fv-blue-triangle--top {
+        left: -78px;
+        top: -72px;
+        right: auto;
+        bottom: auto;
+        width: 52vw;
+        opacity: 0.38;
     }
 
   .fv-text h2 {

@@ -50,6 +50,7 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
     </div>
 
     <div class="fv-blue-triangle" aria-hidden="true"></div>
+    <div class="fv-blue-triangle fv-blue-triangle--top" aria-hidden="true"></div>
 
     <div class="fv-text">
       <p>全国の厨房設備会社が<br class="sp-only">集うネットワーク</p>

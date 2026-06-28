@@ -10,6 +10,8 @@ const REGULAR_MEMBERS_DATA_FILE = __DIR__ . '/data/regular-members.json';
 const SUPPORT_MEMBERS_DATA_FILE = __DIR__ . '/data/support-members.json';
 const CHAIRMAN_MESSAGES_DATA_FILE = __DIR__ . '/data/chairman-messages.json';
 const SETTINGS_DATA_FILE = __DIR__ . '/data/settings.json';
+const MEMBER_ACCOUNTS_DATA_FILE = __DIR__ . '/data/member-accounts.json';
+const MEMBER_CONTENT_DATA_FILE = __DIR__ . '/data/member-content.json';
 const MAP_GROUP_DISTANCE = 2.5;
 const MAP_GROUP_DISTANCE_MOBILE = 4.0;
 const MAP_DOT_SIZE = 12.0;
@@ -615,4 +617,146 @@ function chairman_message_term_display(array $item): string
     $endText = $end !== '' ? $end . '年' : '○年';
 
     return $startText . '〜' . $endText;
+}
+
+function load_member_accounts(bool $activeOnly = true): array
+{
+    if (!is_file(MEMBER_ACCOUNTS_DATA_FILE)) {
+        return [];
+    }
+
+    $json = file_get_contents(MEMBER_ACCOUNTS_DATA_FILE);
+    $items = json_decode($json ?: '[]', true);
+
+    if (!is_array($items)) {
+        return [];
+    }
+
+    if ($activeOnly) {
+        $items = array_values(array_filter($items, function ($item) {
+            return !empty($item['active']);
+        }));
+    }
+
+    return $items;
+}
+
+function find_member_account_by_login_id(string $loginId): ?array
+{
+    foreach (load_member_accounts(true) as $account) {
+        if ((string)($account['login_id'] ?? '') === $loginId) {
+            return $account;
+        }
+    }
+
+    return null;
+}
+
+function find_member_account_by_id(string $id): ?array
+{
+    foreach (load_member_accounts(false) as $account) {
+        if ((string)($account['id'] ?? '') === $id) {
+            return $account;
+        }
+    }
+
+    return null;
+}
+
+function member_type_label(string $type): string
+{
+    return $type === 'support' ? '賛助会員' : '正会員';
+}
+
+function member_content_status_label(string $status): string
+{
+    return match ($status) {
+        'published' => '公開中',
+        'hidden' => '非公開',
+        default => '承認待ち',
+    };
+}
+
+function member_content_visibility_label(string $visibility): string
+{
+    return match ($visibility) {
+        'regular' => '正会員のみ',
+        'support' => '賛助会員のみ',
+        default => '全会員',
+    };
+}
+
+function member_content_category_label(string $category): string
+{
+    return match ($category) {
+        'brochure' => 'パンフレット',
+        'new_product' => '新機種案内',
+        'catalog' => '製品カタログ',
+        'seminar' => '展示会・セミナー',
+        default => 'サービス紹介',
+    };
+}
+
+function load_member_content(bool $visibleOnly = false, ?array $member = null): array
+{
+    if (!is_file(MEMBER_CONTENT_DATA_FILE)) {
+        return [];
+    }
+
+    $json = file_get_contents(MEMBER_CONTENT_DATA_FILE);
+    $items = json_decode($json ?: '[]', true);
+
+    if (!is_array($items)) {
+        return [];
+    }
+
+    if ($visibleOnly) {
+        $today = date('Y-m-d');
+        $memberType = (string)($member['type'] ?? '');
+        $items = array_values(array_filter($items, function ($item) use ($today, $memberType) {
+            if (($item['status'] ?? '') !== 'published') {
+                return false;
+            }
+
+            $visibility = (string)($item['visibility'] ?? 'all');
+            if ($visibility !== 'all' && $visibility !== $memberType) {
+                return false;
+            }
+
+            $startDate = trim((string)($item['publish_start'] ?? ''));
+            $endDate = trim((string)($item['publish_end'] ?? ''));
+
+            if ($startDate !== '' && $startDate > $today) {
+                return false;
+            }
+
+            if ($endDate !== '' && $endDate < $today) {
+                return false;
+            }
+
+            return true;
+        }));
+    }
+
+    usort($items, function ($a, $b) {
+        return strcmp((string)($b['created_at'] ?? ''), (string)($a['created_at'] ?? ''));
+    });
+
+    return $items;
+}
+
+function save_member_content(array $items): bool
+{
+    usort($items, function ($a, $b) {
+        return strcmp((string)($b['created_at'] ?? ''), (string)($a['created_at'] ?? ''));
+    });
+
+    $json = json_encode($items, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    return file_put_contents(MEMBER_CONTENT_DATA_FILE, $json . PHP_EOL, LOCK_EX) !== false;
+}
+
+function member_content_excerpt(string $body, int $length = 90): string
+{
+    return news_excerpt($body, $length);
 }

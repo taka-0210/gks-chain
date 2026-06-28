@@ -1123,13 +1123,21 @@ $contactThanksUrl = $requestScheme . '://' . $requestHost . $requestBasePath . '
       }, 1200);
     }
 
+    function drawLineBurst() {
+      drawRandomLine();
+
+      window.setTimeout(function () {
+        drawRandomLine();
+      }, 180);
+    }
+
     function startLines() {
       if (timerId !== null) {
         return;
       }
 
-      timerId = window.setInterval(drawRandomLine, 850);
-      drawRandomLine();
+      timerId = window.setInterval(drawLineBurst, 900);
+      drawLineBurst();
     }
 
     function stopLines() {

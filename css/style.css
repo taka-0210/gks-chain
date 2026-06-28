@@ -272,17 +272,17 @@ ul {
 }
 
 .fv-blue-triangle {
-  position: absolute;
-  right: -120px;
-  bottom: -190px;
-  width: min(46vw, 650px);
-  aspect-ratio: 1 / 1;
-  background: linear-gradient(135deg, rgba(15, 45, 99, 0.88), rgba(30, 78, 168, 0.72));
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
-  z-index: 3;
-  opacity: 0.9;
-  filter: drop-shadow(-18px -18px 36px rgba(15, 45, 99, 0.18));
-  pointer-events: none;
+    position: absolute;
+    right: -120px;
+    bottom: -190px;
+    width: min(46vw, 650px);
+    aspect-ratio: 1 / 1;
+    background: linear-gradient(135deg, rgba(15, 45, 99, 0.72) 0%, rgba(30, 78, 168, 0.56) 55%, rgba(80, 132, 214, 0.34) 100%);
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    z-index: 3;
+    opacity: 0.82;
+    filter: drop-shadow(-22px -22px 44px rgba(15, 45, 99, 0.14));
+    pointer-events: none;
 }
 
 .fv-text {
@@ -1129,12 +1129,12 @@ section>.section-inner>p {
     height: 620px;
   }
 
-  .fv-blue-triangle {
-    right: -120px;
-    bottom: -150px;
-    width: min(70vw, 460px);
-    opacity: 0.72;
-  }
+    .fv-blue-triangle {
+        right: -120px;
+        bottom: -150px;
+        width: min(70vw, 460px);
+        opacity: 0.58;
+    }
 
   .fv-text h2 {
     font-size: 40px;
@@ -1196,12 +1196,12 @@ section>.section-inner>p {
     height: 560px;
   }
 
-  .fv-blue-triangle {
-    right: -110px;
-    bottom: -110px;
-    width: 82vw;
-    opacity: 0.58;
-  }
+    .fv-blue-triangle {
+        right: -110px;
+        bottom: -110px;
+        width: 82vw;
+        opacity: 0.46;
+    }
 
   .fv-text h2 {
     font-size: 32px;

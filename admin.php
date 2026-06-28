@@ -4,9 +4,11 @@ declare(strict_types=1);
 session_start();
 require_once __DIR__ . '/config.php';
 
+$_SERVER['REQUEST_METHOD'] = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
 $errors = [];
 $message = '';
-$allowedSections = ['news', 'regular_members', 'support_members', 'member_content', 'chairman_messages', 'settings'];
+$allowedSections = ['news', 'regular_members', 'support_members', 'member_accounts', 'member_content', 'chairman_messages', 'settings'];
 $section = (string)($_GET['section'] ?? 'news');
 
 if (!empty($_SESSION['admin_message'])) {
@@ -391,6 +393,67 @@ function collect_member_content_admin_data(): array
         'admin_note' => trim(strip_tags((string)($_POST['admin_note'] ?? ''))),
         'updated_at' => date('Y-m-d H:i:s'),
     ];
+}
+
+function collect_member_account_form_data(?array $existingAccount = null): array
+{
+    $sourceValue = (string)($_POST['source_member'] ?? '');
+    $source = member_account_source_from_value($sourceValue);
+    $password = (string)($_POST['password'] ?? '');
+
+    return [
+        'source_value' => $sourceValue,
+        'source' => $source,
+        'login_id' => trim(strip_tags((string)($_POST['login_id'] ?? ''))),
+        'password' => $password,
+        'contact_name' => trim(strip_tags((string)($_POST['contact_name'] ?? ''))),
+        'email' => trim(strip_tags((string)($_POST['email'] ?? ''))),
+        'active' => !empty($_POST['active']),
+        'password_hash' => $password !== ''
+            ? password_hash($password, PASSWORD_DEFAULT)
+            : (string)($existingAccount['password_hash'] ?? ''),
+    ];
+}
+
+function validate_member_account_form(array $data, string $currentId = ''): array
+{
+    $errors = [];
+
+    if (!$data['source']) {
+        $errors[] = '会員企業を選択してください。';
+    }
+
+    if ($data['login_id'] === '') {
+        $errors[] = 'ログインIDを入力してください。';
+    }
+
+    if ($currentId === '' && $data['password'] === '') {
+        $errors[] = '初期パスワードを入力してください。';
+    }
+
+    if ($data['email'] !== '' && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'メールアドレスを正しく入力してください。';
+    }
+
+    foreach (load_member_accounts(false) as $account) {
+        if ((string)($account['login_id'] ?? '') === $data['login_id'] && (string)($account['id'] ?? '') !== $currentId) {
+            $errors[] = '同じログインIDのアカウントが既にあります。';
+            break;
+        }
+    }
+
+    if ($data['source']) {
+        foreach (load_member_accounts(false) as $account) {
+            if ((string)($account['type'] ?? '') === (string)$data['source']['type']
+                && (string)($account['source_id'] ?? '') === (string)$data['source']['source_id']
+                && (string)($account['id'] ?? '') !== $currentId) {
+                $errors[] = 'この会員企業のアカウントは既にあります。';
+                break;
+            }
+        }
+    }
+
+    return $errors;
 }
 
 function validate_settings_form(array $data): array
@@ -1056,6 +1119,81 @@ if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['ac
     }
 }
 
+if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'member_account_create') {
+    require_csrf();
+
+    $data = collect_member_account_form_data();
+    $errors = array_merge($errors, validate_member_account_form($data));
+
+    if (!$errors) {
+        $source = $data['source'];
+        $items = load_member_accounts(false);
+        array_unshift($items, [
+            'id' => 'member_account_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)),
+            'login_id' => $data['login_id'],
+            'password_hash' => $data['password_hash'],
+            'company' => (string)$source['company'],
+            'type' => (string)$source['type'],
+            'source_id' => (string)$source['source_id'],
+            'contact_name' => $data['contact_name'],
+            'email' => $data['email'],
+            'active' => $data['active'],
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        if (save_member_accounts($items)) {
+            redirect_admin('member_accounts', '会員アカウントを発行しました。');
+        } else {
+            $errors[] = '会員アカウントの保存に失敗しました。';
+        }
+    }
+}
+
+if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'member_account_update') {
+    require_csrf();
+
+    $id = (string)($_POST['id'] ?? '');
+    $existingAccount = $id !== '' ? find_member_account_by_id($id) : null;
+    $data = collect_member_account_form_data($existingAccount);
+    $errors = array_merge($errors, validate_member_account_form($data, $id));
+
+    if ($existingAccount === null) {
+        $errors[] = '編集する会員アカウントが見つかりません。';
+    }
+
+    if (!$errors) {
+        $source = $data['source'];
+        $items = load_member_accounts(false);
+        $updated = false;
+
+        foreach ($items as &$item) {
+            if ((string)($item['id'] ?? '') === $id) {
+                $item = array_merge($item, [
+                    'login_id' => $data['login_id'],
+                    'password_hash' => $data['password_hash'],
+                    'company' => (string)$source['company'],
+                    'type' => (string)$source['type'],
+                    'source_id' => (string)$source['source_id'],
+                    'contact_name' => $data['contact_name'],
+                    'email' => $data['email'],
+                    'active' => $data['active'],
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+                $updated = true;
+                break;
+            }
+        }
+        unset($item);
+
+        if ($updated && save_member_accounts($items)) {
+            redirect_admin('member_accounts', '会員アカウントを更新しました。');
+        } else {
+            $errors[] = '会員アカウントの更新に失敗しました。';
+        }
+    }
+}
+
 if (is_admin_logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'member_content_update') {
     require_csrf();
 
@@ -1215,6 +1353,10 @@ $editingRegularMember = null;
 $supportMembersAdmin = is_admin_logged_in() && $section === 'support_members' ? load_support_members(false) : [];
 $supportEditId = is_admin_logged_in() && $section === 'support_members' ? (string)($_GET['edit'] ?? '') : '';
 $editingSupportMember = null;
+$memberAccountSources = is_admin_logged_in() && $section === 'member_accounts' ? member_account_source_options() : [];
+$memberAccountsAdmin = is_admin_logged_in() && $section === 'member_accounts' ? load_member_accounts(false) : [];
+$memberAccountEditId = is_admin_logged_in() && $section === 'member_accounts' ? (string)($_GET['edit'] ?? '') : '';
+$editingMemberAccount = null;
 $memberContentAdmin = is_admin_logged_in() && $section === 'member_content' ? load_member_content(false) : [];
 $chairmanMessagesAdmin = is_admin_logged_in() && $section === 'chairman_messages' ? load_chairman_messages(false) : [];
 $chairmanMessageEditId = is_admin_logged_in() && $section === 'chairman_messages' ? (string)($_GET['edit'] ?? '') : '';
@@ -1323,6 +1465,31 @@ $supportFormSortOrder = (string)($_POST['sort_order'] ?? ($supportFormItem['sort
 $supportFormPublished = $_SERVER['REQUEST_METHOD'] === 'POST'
     ? !empty($_POST['published'])
     : ($isSupportEditing ? !empty($supportFormItem['published']) : true);
+
+if ($memberAccountEditId !== '') {
+    foreach ($memberAccountsAdmin as $account) {
+        if ((string)($account['id'] ?? '') === $memberAccountEditId) {
+            $editingMemberAccount = $account;
+            break;
+        }
+    }
+
+    if ($editingMemberAccount === null) {
+        $errors[] = '編集する会員アカウントが見つかりません。';
+    }
+}
+
+$memberAccountFormItem = $editingMemberAccount ?? [];
+$isMemberAccountEditing = $editingMemberAccount !== null;
+$memberAccountFormSource = (string)($_POST['source_member'] ?? (($memberAccountFormItem['type'] ?? '') !== '' && ($memberAccountFormItem['source_id'] ?? '') !== ''
+    ? (string)$memberAccountFormItem['type'] . ':' . (string)$memberAccountFormItem['source_id']
+    : ''));
+$memberAccountFormLoginId = (string)($_POST['login_id'] ?? ($memberAccountFormItem['login_id'] ?? ''));
+$memberAccountFormContactName = (string)($_POST['contact_name'] ?? ($memberAccountFormItem['contact_name'] ?? ''));
+$memberAccountFormEmail = (string)($_POST['email'] ?? ($memberAccountFormItem['email'] ?? ''));
+$memberAccountFormActive = $_SERVER['REQUEST_METHOD'] === 'POST'
+    ? !empty($_POST['active'])
+    : ($isMemberAccountEditing ? !empty($memberAccountFormItem['active']) : true);
 
 if ($chairmanMessageEditId !== '') {
     foreach ($chairmanMessagesAdmin as $chairmanMessage) {
@@ -1832,6 +1999,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
         <a href="admin.php?section=news" class="<?= $section === 'news' ? 'active' : ''; ?>">最新情報管理</a>
         <a href="admin.php?section=regular_members" class="<?= $section === 'regular_members' ? 'active' : ''; ?>">正会員情報管理</a>
         <a href="admin.php?section=support_members" class="<?= $section === 'support_members' ? 'active' : ''; ?>">賛助会員情報管理</a>
+        <a href="admin.php?section=member_accounts" class="<?= $section === 'member_accounts' ? 'active' : ''; ?>">会員アカウント管理</a>
         <a href="admin.php?section=member_content" class="<?= $section === 'member_content' ? 'active' : ''; ?>">会員投稿管理</a>
         <a href="admin.php?section=chairman_messages" class="<?= $section === 'chairman_messages' ? 'active' : ''; ?>">歴代会長情報管理</a>
         <a href="admin.php?section=settings" class="<?= $section === 'settings' ? 'active' : ''; ?>">サイト設定</a>
@@ -2215,6 +2383,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
                       <input type="hidden" name="id" value="<?= h((string)($member['id'] ?? '')); ?>">
                       <button class="admin-delete-button" type="submit">削除</button>
                     </form>
+                  </div>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </section>
+    <?php elseif ($section === 'member_accounts'): ?>
+      <section class="admin-panel">
+        <h2><?= $isMemberAccountEditing ? '会員アカウント編集' : '会員アカウント新規発行'; ?></h2>
+        <form class="admin-form" method="POST">
+          <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf']); ?>">
+          <input type="hidden" name="action" value="<?= $isMemberAccountEditing ? 'member_account_update' : 'member_account_create'; ?>">
+          <?php if ($isMemberAccountEditing): ?>
+            <input type="hidden" name="id" value="<?= h((string)($editingMemberAccount['id'] ?? '')); ?>">
+          <?php endif; ?>
+
+          <label>
+            会員企業
+            <select name="source_member" required>
+              <option value="">選択してください</option>
+              <?php foreach ($memberAccountSources as $source): ?>
+                <option value="<?= h((string)$source['value']); ?>" <?= $memberAccountFormSource === (string)$source['value'] ? 'selected' : ''; ?>>
+                  <?= h((string)$source['label']); ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <span class="admin-help">正会員情報管理・賛助会員情報管理に登録済みの会社から選択します。</span>
+          </label>
+
+          <div class="admin-grid">
+            <label>
+              ログインID
+              <input type="text" name="login_id" value="<?= h($memberAccountFormLoginId); ?>" required>
+            </label>
+            <label>
+              <?= $isMemberAccountEditing ? '新しいパスワード' : '初期パスワード'; ?>
+              <input type="text" name="password" value="" <?= $isMemberAccountEditing ? '' : 'required'; ?>>
+              <?php if ($isMemberAccountEditing): ?>
+                <span class="admin-help">変更しない場合は空欄のまま保存してください。</span>
+              <?php endif; ?>
+            </label>
+          </div>
+
+          <div class="admin-grid">
+            <label>
+              担当者名
+              <input type="text" name="contact_name" value="<?= h($memberAccountFormContactName); ?>">
+            </label>
+            <label>
+              メールアドレス
+              <input type="email" name="email" value="<?= h($memberAccountFormEmail); ?>">
+            </label>
+          </div>
+
+          <label class="admin-check">
+            <input type="checkbox" name="active" value="1" <?= $memberAccountFormActive ? 'checked' : ''; ?>>
+            アカウントを有効にする
+          </label>
+
+          <div class="admin-table-actions">
+            <button type="submit"><?= $isMemberAccountEditing ? '更新する' : '発行する'; ?></button>
+            <?php if ($isMemberAccountEditing): ?>
+              <a href="admin.php?section=member_accounts" class="btn">新規発行に戻る</a>
+            <?php endif; ?>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel">
+        <h2>会員アカウント一覧</h2>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>会社名</th>
+              <th>種別</th>
+              <th>ログインID</th>
+              <th>連絡先</th>
+              <th>状態</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($memberAccountsAdmin as $account): ?>
+              <tr>
+                <td><?= h((string)($account['company'] ?? '')); ?></td>
+                <td><?= h(member_type_label((string)($account['type'] ?? 'regular'))); ?></td>
+                <td><?= h((string)($account['login_id'] ?? '')); ?></td>
+                <td>
+                  <?= h((string)($account['contact_name'] ?? '')); ?><br>
+                  <span class="admin-help"><?= h((string)($account['email'] ?? '')); ?></span>
+                </td>
+                <td>
+                  <span class="admin-status-badge <?= !empty($account['active']) ? 'published' : 'hidden'; ?>">
+                    <?= !empty($account['active']) ? '有効' : '停止'; ?>
+                  </span>
+                </td>
+                <td>
+                  <div class="admin-table-actions">
+                    <a class="admin-edit-link" href="admin.php?section=member_accounts&edit=<?= h((string)($account['id'] ?? '')); ?>">編集</a>
                   </div>
                 </td>
               </tr>

@@ -641,11 +641,70 @@ function load_member_accounts(bool $activeOnly = true): array
     return $items;
 }
 
+function save_member_accounts(array $items): bool
+{
+    usort($items, function ($a, $b) {
+        return strcmp((string)($a['company'] ?? ''), (string)($b['company'] ?? ''));
+    });
+
+    $json = json_encode($items, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    return file_put_contents(MEMBER_ACCOUNTS_DATA_FILE, $json . PHP_EOL, LOCK_EX) !== false;
+}
+
 function find_member_account_by_login_id(string $loginId): ?array
 {
-    foreach (load_member_accounts(true) as $account) {
+    foreach (load_member_accounts(false) as $account) {
         if ((string)($account['login_id'] ?? '') === $loginId) {
             return $account;
+        }
+    }
+
+    return null;
+}
+
+function member_account_source_options(): array
+{
+    $options = [];
+
+    foreach (load_regular_members(false) as $member) {
+        $id = (string)($member['id'] ?? '');
+        $company = (string)($member['company'] ?? '');
+
+        if ($id !== '' && $company !== '') {
+            $options[] = [
+                'value' => 'regular:' . $id,
+                'type' => 'regular',
+                'source_id' => $id,
+                'company' => $company,
+                'label' => '正会員 / ' . $company,
+            ];
+        }
+    }
+
+    foreach (load_support_members(false) as $member) {
+        $id = (string)($member['id'] ?? '');
+        $company = (string)($member['company'] ?? '');
+
+        if ($id !== '' && $company !== '') {
+            $options[] = [
+                'value' => 'support:' . $id,
+                'type' => 'support',
+                'source_id' => $id,
+                'company' => $company,
+                'label' => '賛助会員 / ' . $company,
+            ];
+        }
+    }
+
+    return $options;
+}
+
+function member_account_source_from_value(string $value): ?array
+{
+    foreach (member_account_source_options() as $option) {
+        if ($option['value'] === $value) {
+            return $option;
         }
     }
 
@@ -670,31 +729,37 @@ function member_type_label(string $type): string
 
 function member_content_status_label(string $status): string
 {
-    return match ($status) {
+    $labels = [
         'published' => '公開中',
         'hidden' => '非公開',
-        default => '承認待ち',
-    };
+        'pending' => '承認待ち',
+    ];
+
+    return $labels[$status] ?? $labels['pending'];
 }
 
 function member_content_visibility_label(string $visibility): string
 {
-    return match ($visibility) {
+    $labels = [
         'regular' => '正会員のみ',
         'support' => '賛助会員のみ',
-        default => '全会員',
-    };
+        'all' => '全会員',
+    ];
+
+    return $labels[$visibility] ?? $labels['all'];
 }
 
 function member_content_category_label(string $category): string
 {
-    return match ($category) {
+    $labels = [
         'brochure' => 'パンフレット',
         'new_product' => '新機種案内',
         'catalog' => '製品カタログ',
         'seminar' => '展示会・セミナー',
-        default => 'サービス紹介',
-    };
+        'service' => 'サービス紹介',
+    ];
+
+    return $labels[$category] ?? $labels['service'];
 }
 
 function load_member_content(bool $visibleOnly = false, ?array $member = null): array
@@ -743,6 +808,17 @@ function load_member_content(bool $visibleOnly = false, ?array $member = null): 
     });
 
     return $items;
+}
+
+function find_visible_member_content_by_id(string $id, array $member): ?array
+{
+    foreach (load_member_content(true, $member) as $item) {
+        if ((string)($item['id'] ?? '') === $id) {
+            return $item;
+        }
+    }
+
+    return null;
 }
 
 function save_member_content(array $items): bool

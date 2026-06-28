@@ -42,6 +42,17 @@ function redirect_member(string $message = ''): void
     exit;
 }
 
+function find_own_member_content(string $id, array $member): ?array
+{
+    foreach (load_member_content(false) as $item) {
+        if ((string)($item['id'] ?? '') === $id && (string)($item['member_id'] ?? '') === (string)$member['id']) {
+            return $item;
+        }
+    }
+
+    return null;
+}
+
 function collect_member_content_form_data(array $member): array
 {
     $visibility = (string)($_POST['visibility'] ?? 'all');
@@ -119,14 +130,14 @@ function handle_member_upload(string $field, array $allowedTypes, string $direct
         return ['', ['アップロードできるファイル形式ではありません。']];
     }
 
-    $extension = match ($mimeType) {
+    $extensions = [
         'image/jpeg' => 'jpg',
         'image/png' => 'png',
         'image/gif' => 'gif',
         'image/webp' => 'webp',
         'application/pdf' => 'pdf',
-        default => '',
-    };
+    ];
+    $extension = $extensions[$mimeType] ?? '';
 
     if ($extension === '') {
         return ['', ['アップロードできるファイル形式ではありません。']];
@@ -159,12 +170,12 @@ if ($requestMethod === 'POST' && ($_POST['action'] ?? '') === 'login') {
     $password = (string)($_POST['password'] ?? '');
     $account = find_member_account_by_login_id($loginId);
 
-    if ($account && password_verify($password, (string)($account['password_hash'] ?? ''))) {
+    if ($account && !empty($account['active']) && password_verify($password, (string)($account['password_hash'] ?? ''))) {
         $_SESSION['member_id'] = (string)$account['id'];
         redirect_member('ログインしました。');
     }
 
-    $errors[] = 'ログインIDまたはパスワードが違います。';
+    $errors[] = 'ログインIDまたはパスワードが違うか、アカウントが停止されています。';
 }
 
 $member = current_member();
@@ -197,10 +208,93 @@ if ($member && $requestMethod === 'POST' && ($_POST['action'] ?? '') === 'conten
     }
 }
 
+if ($member && $requestMethod === 'POST' && ($_POST['action'] ?? '') === 'content_update') {
+    member_require_csrf();
+
+    $id = (string)($_POST['id'] ?? '');
+    $existingItem = $id !== '' ? find_own_member_content($id, $member) : null;
+    $data = collect_member_content_form_data($member);
+    [$imagePath, $imageErrors] = handle_member_upload('image', ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], 'image/member-content', 'member_image');
+    [$filePath, $fileErrors] = handle_member_upload('attachment', ['application/pdf'], 'file/member-content', 'member_file');
+    $errors = array_merge($errors, $imageErrors, $fileErrors, validate_member_content_form($data));
+
+    if ($existingItem === null) {
+        $errors[] = '編集する投稿が見つかりません。';
+    }
+
+    if (!$errors) {
+        $items = load_member_content(false);
+        $updated = false;
+
+        foreach ($items as &$item) {
+            if ((string)($item['id'] ?? '') === $id && (string)($item['member_id'] ?? '') === (string)$member['id']) {
+                $item = array_merge($item, $data, [
+                    'image' => $imagePath !== '' ? $imagePath : (string)($item['image'] ?? ''),
+                    'attachment' => $filePath !== '' ? $filePath : (string)($item['attachment'] ?? ''),
+                    'status' => 'pending',
+                    'admin_note' => '',
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+                $updated = true;
+                break;
+            }
+        }
+        unset($item);
+
+        if ($updated && save_member_content($items)) {
+            redirect_member('投稿を更新しました。管理者の再承認後に公開されます。');
+        }
+
+        $errors[] = '投稿の更新に失敗しました。';
+    }
+}
+
+if ($member && $requestMethod === 'POST' && ($_POST['action'] ?? '') === 'content_withdraw') {
+    member_require_csrf();
+
+    $id = (string)($_POST['id'] ?? '');
+    $items = load_member_content(false);
+    $updated = false;
+
+    foreach ($items as &$item) {
+        if ((string)($item['id'] ?? '') === $id && (string)($item['member_id'] ?? '') === (string)$member['id']) {
+            $item['status'] = 'hidden';
+            $item['updated_at'] = date('Y-m-d H:i:s');
+            $updated = true;
+            break;
+        }
+    }
+    unset($item);
+
+    if ($updated && save_member_content($items)) {
+        redirect_member('投稿を取り下げました。');
+    }
+
+    $errors[] = '投稿の取り下げに失敗しました。';
+}
+
 $visibleItems = $member ? load_member_content(true, $member) : [];
 $myItems = $member ? array_values(array_filter(load_member_content(false), function ($item) use ($member) {
     return (string)($item['member_id'] ?? '') === (string)$member['id'];
 })) : [];
+$editId = $member ? (string)($_GET['edit'] ?? '') : '';
+$editingContent = $editId !== '' && $member ? find_own_member_content($editId, $member) : null;
+
+if ($editId !== '' && $editingContent === null) {
+    $errors[] = '編集する投稿が見つかりません。';
+}
+
+$isContentEditing = $editingContent !== null;
+$contentFormItem = $editingContent ?? [];
+$contentFormTitle = (string)($_POST['title'] ?? ($contentFormItem['title'] ?? ''));
+$contentFormCategory = (string)($_POST['category'] ?? ($contentFormItem['category'] ?? 'service'));
+$contentFormBody = (string)($_POST['body'] ?? ($contentFormItem['body'] ?? ''));
+$contentFormVisibility = (string)($_POST['visibility'] ?? ($contentFormItem['visibility'] ?? 'all'));
+$contentFormLink = (string)($_POST['link'] ?? ($contentFormItem['link'] ?? ''));
+$contentFormPublishStart = (string)($_POST['publish_start'] ?? ($contentFormItem['publish_start'] ?? ''));
+$contentFormPublishEnd = (string)($_POST['publish_end'] ?? ($contentFormItem['publish_end'] ?? ''));
+$contentFormContactName = (string)($_POST['contact_name'] ?? ($contentFormItem['contact_name'] ?? ''));
+$contentFormContactEmail = (string)($_POST['contact_email'] ?? ($contentFormItem['contact_email'] ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -280,26 +374,23 @@ $myItems = $member ? array_values(array_filter(load_member_content(false), funct
             <div class="member-card-grid">
               <?php foreach ($visibleItems as $item): ?>
                 <article class="member-card">
-                  <?php if (!empty($item['image'])): ?>
-                    <img src="<?= h((string)$item['image']); ?>" alt="<?= h((string)($item['title'] ?? '')); ?>">
-                  <?php endif; ?>
-                  <div class="member-card-body">
-                    <div class="member-tags">
-                      <span><?= h(member_content_category_label((string)($item['category'] ?? 'service'))); ?></span>
-                      <span><?= h(member_content_visibility_label((string)($item['visibility'] ?? 'all'))); ?></span>
+                  <a class="member-card-link" href="member-detail.php?id=<?= h(rawurlencode((string)($item['id'] ?? ''))); ?>">
+                    <?php if (!empty($item['image'])): ?>
+                      <img src="<?= h((string)$item['image']); ?>" alt="<?= h((string)($item['title'] ?? '')); ?>">
+                    <?php endif; ?>
+                    <div class="member-card-body">
+                      <div class="member-tags">
+                        <span><?= h(member_content_category_label((string)($item['category'] ?? 'service'))); ?></span>
+                        <span><?= h(member_content_visibility_label((string)($item['visibility'] ?? 'all'))); ?></span>
+                      </div>
+                      <h3><?= h((string)($item['title'] ?? '')); ?></h3>
+                      <p class="member-card-company"><?= h((string)($item['company'] ?? '')); ?></p>
+                      <p><?= h(member_content_excerpt((string)($item['body'] ?? ''))); ?></p>
+                      <div class="member-card-actions">
+                        <span>詳細を見る</span>
+                      </div>
                     </div>
-                    <h3><?= h((string)($item['title'] ?? '')); ?></h3>
-                    <p class="member-card-company"><?= h((string)($item['company'] ?? '')); ?></p>
-                    <p><?= h(member_content_excerpt((string)($item['body'] ?? ''))); ?></p>
-                    <div class="member-card-actions">
-                      <?php if (!empty($item['attachment'])): ?>
-                        <a href="<?= h((string)$item['attachment']); ?>" target="_blank" rel="noopener">PDFを見る</a>
-                      <?php endif; ?>
-                      <?php if (!empty($item['link'])): ?>
-                        <a href="<?= h((string)$item['link']); ?>" target="_blank" rel="noopener">詳細リンク</a>
-                      <?php endif; ?>
-                    </div>
-                  </div>
+                  </a>
                 </article>
               <?php endforeach; ?>
             </div>
@@ -310,77 +401,87 @@ $myItems = $member ? array_values(array_filter(load_member_content(false), funct
           <div class="member-section-head">
             <div>
               <p class="member-kicker">SUBMIT</p>
-              <h2>自社情報を登録</h2>
+              <h2><?= $isContentEditing ? '自社情報を編集' : '自社情報を登録'; ?></h2>
             </div>
+            <?php if ($isContentEditing): ?>
+              <a class="member-link-button secondary" href="member.php">新規登録に戻る</a>
+            <?php endif; ?>
           </div>
           <form class="member-form" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf" value="<?= h($_SESSION['member_csrf']); ?>">
-            <input type="hidden" name="action" value="content_create">
+            <input type="hidden" name="action" value="<?= $isContentEditing ? 'content_update' : 'content_create'; ?>">
+            <?php if ($isContentEditing): ?>
+              <input type="hidden" name="id" value="<?= h((string)($editingContent['id'] ?? '')); ?>">
+            <?php endif; ?>
             <div class="member-form-grid">
               <label>
                 タイトル
-                <input type="text" name="title" required>
+                <input type="text" name="title" value="<?= h($contentFormTitle); ?>" required>
               </label>
               <label>
                 カテゴリ
                 <select name="category">
-                  <option value="service">サービス紹介</option>
-                  <option value="brochure">パンフレット</option>
-                  <option value="new_product">新機種案内</option>
-                  <option value="catalog">製品カタログ</option>
-                  <option value="seminar">展示会・セミナー</option>
+                  <?php foreach (['service', 'brochure', 'new_product', 'catalog', 'seminar'] as $categoryOption): ?>
+                    <option value="<?= h($categoryOption); ?>" <?= $contentFormCategory === $categoryOption ? 'selected' : ''; ?>><?= h(member_content_category_label($categoryOption)); ?></option>
+                  <?php endforeach; ?>
                 </select>
               </label>
             </div>
             <label>
               内容
-              <textarea name="body" required></textarea>
+              <textarea name="body" required><?= h($contentFormBody); ?></textarea>
             </label>
             <div class="member-form-grid">
               <label>
                 公開範囲
                 <select name="visibility">
-                  <option value="all">全会員</option>
-                  <option value="regular">正会員のみ</option>
-                  <option value="support">賛助会員のみ</option>
+                  <?php foreach (['all', 'regular', 'support'] as $visibilityOption): ?>
+                    <option value="<?= h($visibilityOption); ?>" <?= $contentFormVisibility === $visibilityOption ? 'selected' : ''; ?>><?= h(member_content_visibility_label($visibilityOption)); ?></option>
+                  <?php endforeach; ?>
                 </select>
               </label>
               <label>
                 詳細リンク
-                <input type="url" name="link" placeholder="https://example.com">
+                <input type="url" name="link" value="<?= h($contentFormLink); ?>" placeholder="https://example.com">
               </label>
             </div>
             <div class="member-form-grid">
               <label>
                 公開開始日
-                <input type="date" name="publish_start">
+                <input type="date" name="publish_start" value="<?= h($contentFormPublishStart); ?>">
               </label>
               <label>
                 公開終了日
-                <input type="date" name="publish_end">
+                <input type="date" name="publish_end" value="<?= h($contentFormPublishEnd); ?>">
               </label>
             </div>
             <div class="member-form-grid">
               <label>
                 画像
                 <input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp">
+                <?php if ($isContentEditing && !empty($editingContent['image'])): ?>
+                  <span class="member-help">現在の画像: <?= h((string)$editingContent['image']); ?></span>
+                <?php endif; ?>
               </label>
               <label>
                 PDF
                 <input type="file" name="attachment" accept="application/pdf">
+                <?php if ($isContentEditing && !empty($editingContent['attachment'])): ?>
+                  <span class="member-help">現在のPDF: <?= h((string)$editingContent['attachment']); ?></span>
+                <?php endif; ?>
               </label>
             </div>
             <div class="member-form-grid">
               <label>
                 担当者名
-                <input type="text" name="contact_name">
+                <input type="text" name="contact_name" value="<?= h($contentFormContactName); ?>">
               </label>
               <label>
                 連絡先メール
-                <input type="email" name="contact_email">
+                <input type="email" name="contact_email" value="<?= h($contentFormContactEmail); ?>">
               </label>
             </div>
-            <button type="submit">承認待ちで登録する</button>
+            <button type="submit"><?= $isContentEditing ? '承認待ちで更新する' : '承認待ちで登録する'; ?></button>
           </form>
         </section>
 
@@ -404,6 +505,7 @@ $myItems = $member ? array_values(array_filter(load_member_content(false), funct
                     <th>公開範囲</th>
                     <th>状態</th>
                     <th>登録日</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -414,6 +516,19 @@ $myItems = $member ? array_values(array_filter(load_member_content(false), funct
                       <td><?= h(member_content_visibility_label((string)($item['visibility'] ?? 'all'))); ?></td>
                       <td><span class="member-status <?= h((string)($item['status'] ?? 'pending')); ?>"><?= h(member_content_status_label((string)($item['status'] ?? 'pending'))); ?></span></td>
                       <td><?= h((string)($item['created_at'] ?? '')); ?></td>
+                      <td>
+                        <div class="member-table-actions">
+                          <a class="member-small-button" href="member.php?edit=<?= h(rawurlencode((string)($item['id'] ?? ''))); ?>">編集</a>
+                          <?php if (($item['status'] ?? '') !== 'hidden'): ?>
+                            <form method="POST" onsubmit="return confirm('この投稿を取り下げますか？');">
+                              <input type="hidden" name="csrf" value="<?= h($_SESSION['member_csrf']); ?>">
+                              <input type="hidden" name="action" value="content_withdraw">
+                              <input type="hidden" name="id" value="<?= h((string)($item['id'] ?? '')); ?>">
+                              <button type="submit" class="member-small-button danger">取り下げ</button>
+                            </form>
+                          <?php endif; ?>
+                        </div>
+                      </td>
                     </tr>
                   <?php endforeach; ?>
                 </tbody>

@@ -463,7 +463,11 @@ section>.section-inner>p {
 }
 
 .about-more {
+  display: block;
+  width: fit-content;
   margin-top: 8px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .about-images {

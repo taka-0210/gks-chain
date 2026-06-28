@@ -1745,7 +1745,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
         <a href="admin.php?section=news" class="<?= $section === 'news' ? 'active' : ''; ?>">最新情報管理</a>
         <a href="admin.php?section=regular_members" class="<?= $section === 'regular_members' ? 'active' : ''; ?>">正会員情報管理</a>
         <a href="admin.php?section=support_members" class="<?= $section === 'support_members' ? 'active' : ''; ?>">賛助会員情報管理</a>
-        <a href="admin.php?section=chairman_messages" class="<?= $section === 'chairman_messages' ? 'active' : ''; ?>">歴代会長の言葉管理</a>
+        <a href="admin.php?section=chairman_messages" class="<?= $section === 'chairman_messages' ? 'active' : ''; ?>">歴代会長情報管理</a>
         <a href="admin.php?section=settings" class="<?= $section === 'settings' ? 'active' : ''; ?>">サイト設定</a>
       </nav>
     <?php endif; ?>
@@ -2136,7 +2136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
       </section>
     <?php elseif ($section === 'chairman_messages'): ?>
       <section class="admin-panel">
-        <h2><?= $isChairmanMessageEditing ? '歴代会長の言葉 編集' : '歴代会長の言葉 新規登録'; ?></h2>
+        <h2><?= $isChairmanMessageEditing ? '歴代会長情報 編集' : '歴代会長情報 新規登録'; ?></h2>
         <form class="admin-form" method="POST" enctype="multipart/form-data">
           <input type="hidden" name="csrf" value="<?= h($_SESSION['csrf']); ?>">
           <input type="hidden" name="action" value="<?= $isChairmanMessageEditing ? 'chairman_message_update' : 'chairman_message_create'; ?>">
@@ -2212,7 +2212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'setti
       </section>
 
       <section class="admin-panel">
-        <h2>歴代会長の言葉一覧</h2>
+        <h2>歴代会長情報一覧</h2>
         <table class="admin-table">
           <thead>
             <tr>

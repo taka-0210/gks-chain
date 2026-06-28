@@ -120,6 +120,7 @@
 }
 
 .about-message {
+  position: relative;
   padding: 42px;
   border-radius: 8px;
   background: #fff;
@@ -127,15 +128,16 @@
 }
 
 .about-message-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
+  min-height: 138px;
+  padding-right: 170px;
 }
 
 .about-message-head img {
-  width: 92px;
-  height: 92px;
-  flex: 0 0 auto;
+  position: absolute;
+  top: 42px;
+  right: 42px;
+  width: 132px;
+  height: 132px;
   object-fit: cover;
   border-radius: 50%;
   border: 3px solid #eef4ff;
@@ -151,6 +153,7 @@
   color: #0f2d63;
   font-size: 15px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .about-message h3 {
@@ -268,7 +271,15 @@
   }
 
   .about-message-head {
-    align-items: flex-start;
+    min-height: 0;
+    padding-right: 0;
+  }
+
+  .about-message-head img {
+    position: static;
+    width: 112px;
+    height: 112px;
+    margin: 0 0 20px auto;
   }
 }
 
